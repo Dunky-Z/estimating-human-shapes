@@ -17,6 +17,7 @@ void Estimate::Apply()
 	mesh.read(ori_mesh_path);
 
 	Estimate estimate;
+	ConvexHull convex_hull;
 	std::vector<float> scale_set;
 	std::vector<pmp::Edge> edgs_intersect;
 	std::vector<pmp::vec3> intersect_points;
@@ -25,6 +26,8 @@ void Estimate::Apply()
 	estimate.SetBool(mesh);
 	estimate.CalcIntersectionPoints(intersect_points, edgs_intersect, scale_set, mesh, normal, ori_point);
 
+	vector<pmp::vec3> output = convex_hull.chansalgorithm(intersect_points);
+
 }
 
 /*!
@@ -32,7 +35,8 @@ void Estimate::Apply()
 *@param[out]
 *@param[in]  SurfaceMesh & mesh
 *@return     void
-*/void Estimate::SetBool(SurfaceMesh&mesh)
+*/
+void Estimate::SetBool(SurfaceMesh&mesh)
 {
 	auto is_checked = mesh.add_edge_property<bool>("e:isChecked");
 	for (auto e : mesh.edges())
@@ -42,9 +46,18 @@ void Estimate::Apply()
 }
 
 
+/*!
+*@brief  计算交点坐标
+*@param[out] 
+*@param[in]  pmp::vec3 & intersect_point  
+*@param[in]  const float & scale  
+*@param[in]  const SurfaceMesh & mesh  
+*@param[in]  const pmp::vec3 & p0  
+*@param[in]  const pmp::vec3 & p1  
+*@return     void  
+*/
 void Estimate::CalcIntersectionPoint(pmp::vec3& intersect_point, const float& scale, const SurfaceMesh& mesh, const pmp::vec3& p0, const pmp::vec3& p1)
 {
-
 	//如果相交于顶点，交点即顶点坐标
 	if (scale == 0)
 	{
@@ -56,7 +69,17 @@ void Estimate::CalcIntersectionPoint(pmp::vec3& intersect_point, const float& sc
 	}
 }
 
-float Estimate::CheckIntersection(pmp::vec3 intersect_point, const pmp::Edge& edg, const pmp::vec3& normal, const pmp::vec3& v, const SurfaceMesh & mesh)
+/*!
+*@brief  判断是否与直线相交
+*@param[out] 
+*@param[in]  pmp::vec3 & intersect_point  
+*@param[in]  const pmp::Edge & edg  
+*@param[in]  const pmp::vec3 & normal  
+*@param[in]  const pmp::vec3 & v  
+*@param[in]  const SurfaceMesh & mesh  
+*@return     float  
+*/
+float Estimate::CheckIntersection(pmp::vec3& intersect_point, const pmp::Edge& edg, const pmp::vec3& normal, const pmp::vec3& v, const SurfaceMesh & mesh)
 {
 	pmp::vec3 p0 = mesh.position(mesh.vertex(edg, 0));
 
@@ -81,6 +104,12 @@ float Estimate::CheckIntersection(pmp::vec3 intersect_point, const pmp::Edge& ed
 }
 
 
+/*!
+*@brief  计算围长
+*@param[out] 
+*@param[in]  std::vector<pmp::vec3> & intersect_points  
+*@return     float  
+*/
 float Estimate::CalcChainLength(std::vector<pmp::vec3>& intersect_points)
 {
 	float chain_len = 0;
@@ -93,17 +122,27 @@ float Estimate::CalcChainLength(std::vector<pmp::vec3>& intersect_points)
 		chain_len += len;
 	}
 
-	cout << "chain_len: " << chain_len << endl;
 	return chain_len;
 }
 
+/*!
+*@brief  计算所有的交点
+*@param[out] 
+*@param[in]  std::vector<pmp::vec3> & intersect_points  
+*@param[in]  std::vector<pmp::Edge> & edgs_intersect  
+*@param[in]  std::vector<float> & scale_set  
+*@param[in]  SurfaceMesh & mesh  
+*@param[in]  const pmp::vec3 & normal  
+*@param[in]  const pmp::vec3 & v  
+*@return     void  
+*/
 void Estimate::CalcIntersectionPoints(std::vector<pmp::vec3>& intersect_points, std::vector<pmp::Edge>& edgs_intersect, std::vector<float>& scale_set,
 	SurfaceMesh& mesh, const pmp::vec3& normal, const pmp::vec3& v)
 {
 	pmp::vec3 intersect_point;
 	//会求出三个点集，分别为中间身体的围长和手臂的围长,用一个临时数组保存其他两个点集
-	std::vector<pmp::vec3> intersect_points_t;
-	int chain_len = INT_MIN, chain_len_t;
+
+	float chain_len = INT_MIN, chain_len_t;
 
 	auto is_checked = mesh.get_edge_property<bool>("e:isChecked");
 	for (auto &edg : mesh.edges())
@@ -114,8 +153,7 @@ void Estimate::CalcIntersectionPoints(std::vector<pmp::vec3>& intersect_points, 
 		float scale = CheckIntersection(intersect_point, edg, normal, v, mesh);
 		if (scale >= 0 && scale <= 1)
 		{
-			cout << "scale: " << scale << endl;
-
+			std::vector<pmp::vec3> intersect_points_t;
 			is_checked[edg] = 1;
 			scale_set.push_back(scale);
 			edgs_intersect.push_back(edg);
@@ -139,7 +177,20 @@ void Estimate::CalcIntersectionPoints(std::vector<pmp::vec3>& intersect_points, 
 }
 
 
-
+/*!
+*@brief  对输入的边进行邻域遍历，找到所有与平面相交的边
+*@param[out] 
+*@param[in]  pmp::EdgeProperty<bool> & is_checked  
+*@param[in]  std::vector<float> & scale_set  
+*@param[in]  std::vector<pmp::vec3> & intersect_points  
+*@param[in]  std::vector<pmp::Edge> & edgs_intersect  
+*@param[in]  const SurfaceMesh & mesh  
+*@param[in]  const pmp::Edge & edg  
+*@param[in]  const pmp::vec3 & normal  
+*@param[in]  const pmp::vec3 & v  
+*@param[in]  pmp::vec3 intersect_point  
+*@return     void  
+*/
 void Estimate::FindIntersectionEdgeNearby(pmp::EdgeProperty<bool>& is_checked, std::vector<float>& scale_set, std::vector<pmp::vec3>& intersect_points,
 	std::vector<pmp::Edge>& edgs_intersect, const SurfaceMesh& mesh, const pmp::Edge& edg, const pmp::vec3& normal, const pmp::vec3& v, pmp::vec3 intersect_point)
 {
@@ -150,7 +201,7 @@ void Estimate::FindIntersectionEdgeNearby(pmp::EdgeProperty<bool>& is_checked, s
 	{
 		i++;
 		pmp::Edge edg_next = mesh.edge(half_edge_next);
-		float scale = CheckIntersection(intersect_point, edg, normal, v, mesh);
+		float scale = CheckIntersection(intersect_point, edg_next, normal, v, mesh);
 		if (scale >= 0 && scale <= 1)
 		{
 			is_checked[edg_next] = 1;
@@ -167,5 +218,4 @@ void Estimate::FindIntersectionEdgeNearby(pmp::EdgeProperty<bool>& is_checked, s
 		}
 		half_edge_next = mesh.next_halfedge(half_edge_next);
 	}
-	cout << "找到了：" << i << "个边" << endl;
 }
