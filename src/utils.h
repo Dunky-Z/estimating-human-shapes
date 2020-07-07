@@ -1,8 +1,12 @@
 #pragma once
+
+#include <io.h>
+#include <vector>
 #include <string>
-#include <fstream>
 #include <iostream>
+#include <algorithm>
 #include <Eigen/Dense>
+
 
 #include "pmp/SurfaceMesh.h"
 
@@ -15,13 +19,13 @@ using namespace Eigen;
 #define COLLINEAR 0  // Collinear
 
 
-const string ori_mesh_path = "./model/male01.obj";
-const string points_path = "./model/points.txt";
-const string convex_hull_path = "./model/convexhull.txt";
+const string ori_mesh_path = "./data/male01.obj";
+const string points_path = "./data/points.txt";
+const string convex_hull_path = "./data/convexhull.txt";
 
-const std::string DATASET_PATH = "./model/";
+const std::string DATASET_PATH = "D:/ITabc/ITabc/objDataSet/dataset/male_tmp/";
 //const std::string DATASET_PATH = "./model/";
-const std::string BIN_DATA_PATH = "./model/";
+const std::string BIN_DATA_PATH = "./data/";
 //const std::string BIN_DATA_PATH = "./model/";
 
 /*!
@@ -43,3 +47,10 @@ const std::string BIN_DATA_PATH = "./model/";
 //	os.close();
 //	return 1;
 //}
+
+/*!
+*@brief  读取文件夹下所有文件
+*@param[out]
+*@param[in]  const std::string & cate_dir  文件夹路径
+*@return     std::vector<std::string>  文件夹下所有文件
+*/

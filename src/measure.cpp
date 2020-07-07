@@ -63,7 +63,7 @@ Measure::~Measure() { }
 		//用凸包计算出来的围长替换之前的测地距离
 		if (idx == 4 || idx == 5 || idx == 6)
 		{
-			measure_list(idx++) = circumferences[idx - 4]*1000;
+			//measure_list(idx++) = circumferences[idx - 4] * 1000;
 			continue;
 		}
 		double length = 0.0;
@@ -432,8 +432,6 @@ void Measure::FindIntersectionEdgeNearby(pmp::EdgeProperty<bool>& is_checked, st
 	}
 }
 
-
-
 float Measure::CalcConvexCircumference(SurfaceMesh& mesh, const int index)
 {
 	std::vector<float> scale_set;
@@ -449,8 +447,33 @@ float Measure::CalcConvexCircumference(SurfaceMesh& mesh, const int index)
 
 std::vector<float> Measure::CalcConvexCircumferences(SurfaceMesh& mesh)
 {
+	std::vector<float> circumferences;
 	for (auto& id : cir_index)
 	{
 		circumferences.push_back(CalcConvexCircumference(mesh, id));
 	}
+	return circumferences;
+}
+
+void Measure::CalcCircumferencesAndSave()
+{
+	std::string trainModelPath = DATASET_PATH;
+	std::vector<std::string> trainFiles = GetFiles(trainModelPath + "*");
+	Eigen::MatrixX3f circum;
+	circum.resize(trainFiles.size(),3);
+	int idx = 0;
+	for (auto & file_name : trainFiles)
+	{
+		SurfaceMesh mesh;
+		mesh.read((trainModelPath + file_name).c_str());
+		std::vector<float> circum_t = CalcConvexCircumferences(mesh);
+		Eigen::RowVector3f row_;
+		for (int i = 0; i < 3; ++i)
+		{
+			row_(i) = circum_t[i];
+		}
+		circum.block(idx,0,1,3) = row_;
+	}
+	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "circumferences").c_str(), circum);
+	cout << circum.rows() << "   " << circum.cols() << endl;
 }

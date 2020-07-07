@@ -13,9 +13,6 @@ Estimate::~Estimate()
 
 void Estimate::Apply()
 {
-	SurfaceMesh mesh;
-	mesh.read(ori_mesh_path);
-
 	//std::vector<float> scale_set;
 	//std::vector<pmp::Edge> edgs_intersect;
 	//std::vector<pmp::vec3> intersect_points;
@@ -29,5 +26,5 @@ void Estimate::Apply()
 	//SavePointToFile(convex_hull_path, output);
 	/*--------------------------------------------------------------------------*/
 	Measure mesaure;
-	mesaure.CalcConvexCircumferences(mesh);
+	mesaure.CalcCircumferencesAndSave();
 }
