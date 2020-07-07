@@ -24,6 +24,15 @@ public:
 	void SaveBinVerts(const char *filename, const std::string &path, const std::vector<std::string> &files);
 	void SaveBinFaces(const char *filename, const std::string &path, const std::vector<std::string> &files);
 	void SaveVertFacetInBin();
+	void Reshaper::CalcMeanMesh(const char * filename, const Eigen::MatrixXd &vertices, const Eigen::Matrix3Xi &facets, Eigen::Matrix3Xd &undeform_mesh);
+	void Reshaper::GetKnownUndeformedVerticeInverse(Eigen::MatrixX3d &undeform_mesh, const Eigen::Matrix3Xi &facets, Eigen::MatrixXd &v_inverse);
+	void Reshaper::SaveDataInBinary(Eigen::MatrixXd &vertices, const Eigen::Matrix3Xi &facets, Eigen::MatrixXd v_inverse,
+		Eigen::MatrixXd &Q_transformation, Eigen::MatrixXd &Q_determinant, Eigen::MatrixXd &mean_deform, Eigen::MatrixXd &std_deform);
+	double CalcStd(const Eigen::MatrixXd &x, const double average);
+	double CalcVariance(const Eigen::MatrixXd &x, const double average);
+	Eigen::MatrixXd Reshaper::GetOneModelTransformation(Eigen::MatrixXd &deformed_mesh, const Eigen::Matrix3Xi &facets);
+	void GetTransformationBasis(Eigen::MatrixXd &transformation, Eigen::MatrixXd &coefficient, Eigen::MatrixXd &basis);
+	void Reshaper::GetMeasure2Deform(Eigen::MatrixXd &coefficient, Eigen::MatrixXd &measurelist, Eigen::MatrixXd &measure2deform);
 private:
 
 };

@@ -25,7 +25,7 @@ public:
 	Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<double>>>& control_points, const Eigen::Matrix3Xd & vertices,
 		const Eigen::Matrix3Xi &facets, Eigen::MatrixX3f circum, int index);
 	void Measure::ConvertMeasure(const Eigen::MatrixXd & all_vertices, const Eigen::Matrix3Xi &facets,
-		const std::vector<std::vector<std::vector<double>>>& control_points, Eigen::MatrixXd &measure_lists, Eigen::MatrixX3f circum, int index);
+		const std::vector<std::vector<std::vector<double>>>& control_points, Eigen::MatrixXd &measure_lists, Eigen::MatrixX3f circum);
 	float orientation(const pmp::vec3& p, const pmp::vec3& q, const pmp::vec3& r);
 	bool compare(const pmp::vec3& p1, const pmp::vec3& p2);
 	vector<pmp::vec3> keep_left(vector<pmp::vec3>& v, pmp::vec3& p);

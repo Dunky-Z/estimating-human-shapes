@@ -25,5 +25,6 @@ void Estimate::Apply()
 	//SavePointToFile(convex_hull_path, output);
 	/*--------------------------------------------------------------------------*/
 	Measure mesaure;
+
 	mesaure.CalcCircumferencesAndSave();
 }

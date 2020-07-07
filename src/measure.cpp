@@ -125,7 +125,7 @@ double Measure::CalcStd(const Eigen::MatrixXd &x, const double average)
 *@param[in]  Eigen::MatrixXd & measure_lists  ²âÁ¿Êı¾İ¾ØÕó shape(19, num_model)
 *@return     void
 */void Measure::ConvertMeasure(const Eigen::MatrixXd & all_vertices, const Eigen::Matrix3Xi &facets,
-	const std::vector<std::vector<std::vector<double>>>& control_points, Eigen::MatrixXd &measure_lists, Eigen::MatrixX3f circum, int index)
+	const std::vector<std::vector<std::vector<double>>>& control_points, Eigen::MatrixXd &measure_lists, Eigen::MatrixX3f circum)
 {
 	cout << "Start convert measure..." << endl;
 
@@ -136,7 +136,6 @@ double Measure::CalcStd(const Eigen::MatrixXd &x, const double average)
 	measure_lists.resize(19, all_vertices.cols());
 	for (int i = 0; i < all_vertices.cols(); ++i)
 	{
-		cout << i << endl;
 		verts = all_vertices.col(i);
 		verts.resize(3, 12500);
 		measure_list = measure.CalcMeasure(control_points, verts, facets, circum, i);

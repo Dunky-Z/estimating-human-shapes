@@ -308,3 +308,326 @@ void Reshaper::FitMeasurements(Eigen::Matrix3Xd& res_verts, std::vector<std::vec
 }
 
 
+void Reshaper::CalcMeanMesh(const char * filename, const Eigen::MatrixXd &vertices, const Eigen::Matrix3Xi &facets, Eigen::Matrix3Xd &undeform_mesh)
+{
+	cout << "Begin CalcMeanMesh..." << endl;
+	Eigen::MatrixXd newV = vertices.rowwise().mean();
+	newV.resize(3, VERTS);
+	meshio::SaveObj(filename, newV, facets);
+	cout << "Finished CalcMeanMesh!" << endl;
+}
+
+void Reshaper::GetKnownUndeformedVerticeInverse(Eigen::MatrixX3d &undeform_mesh, const Eigen::Matrix3Xi &facets, Eigen::MatrixXd &v_inverse)
+{
+	cout << "Start Calc Inverse..." << endl;
+	clock_t t = clock();
+	v_inverse.resize(3 * FACES, 3);
+	// i为三角面片的下标
+	for (int i = 0; i < FACES; ++i)
+	{
+		Eigen::Vector3d v_undeformed[4];
+		for (int j = 0; j < 3; ++j)
+		{
+			//idx为顶点的下标
+			int idx_undeformed[3];
+			idx_undeformed[j] = facets(j, i);
+
+			//k 表示顶点的x,y,z坐标
+			for (int k = 0; k < 3; ++k)
+			{
+				v_undeformed[j](k) = undeform_mesh(idx_undeformed[j], k);
+			}
+		}
+
+		//虚构第四个顶点
+		Eigen::Vector3d edge1_underformed = v_undeformed[1] - v_undeformed[0];
+		Eigen::Vector3d edge2_underformed = v_undeformed[2] - v_undeformed[0];
+		Eigen::Vector3d edge3_underformed = edge1_underformed.cross(edge2_underformed);
+		double edge3_underformed_norm = edge3_underformed.norm();
+		Eigen::Vector3d v_cross = edge3_underformed.array() / std::sqrt(edge3_underformed_norm);
+
+		v_undeformed[3] = v_undeformed[0] + v_cross;
+
+		//建立边组成的矩阵
+		//V_j = [v_i2 - v_i1	v_i3 - v_i1  v_i4 - v_i1]
+		Eigen::Matrix3d v_edge_undeformed;
+		for (int i = 0; i < 3; ++i)
+		{
+			v_edge_undeformed.col(i) = v_undeformed[i + 1] - v_undeformed[0];
+		}
+		Eigen::Matrix3d v_inverse_ = v_edge_undeformed.inverse();
+		v_inverse.block<3, 3>(i * 3, 0) = v_inverse_;
+	}
+
+	//printShape(v_inverse);
+	//cout << v_inverse.topRows(9) << endl;
+	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "v_inverse").c_str(), v_inverse);
+	cout << "Calculate Inverse spend: " << (double)(clock() - t) / CLOCKS_PER_SEC << "seconds." << endl;
+}
+
+
+void Reshaper::SaveDataInBinary(Eigen::MatrixXd &vertices, const Eigen::Matrix3Xi &facets, Eigen::MatrixXd v_inverse,
+	Eigen::MatrixXd &Q_transformation, Eigen::MatrixXd &Q_determinant, Eigen::MatrixXd &mean_deform, Eigen::MatrixXd &std_deform)
+{
+	cout << "Start Save data..." << endl;
+	clock_t t = clock();
+	int num_models = vertices.cols();
+	Q_transformation.resize(num_models, FACES * 9);
+	Q_determinant.resize(num_models, FACES);
+	Eigen::MatrixXd mesh, t_mesh;
+
+
+	//Eigen::MatrixXd shu;
+	//shu.resize(6, 3);
+	//shu << 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18;
+	//cout << shu << endl;
+	//shu.resize(1, 18);
+	//cout << shu << endl;
+
+	for (int i = 0; i < num_models; ++i)
+	{
+		//取出第i个模型的顶点信息
+		mesh.resize(VERTS, 3);
+		t_mesh = vertices.col(i);
+
+		for (int p = 0; p < VERTS; ++p)
+		{
+			Eigen::MatrixXd t_v = t_mesh.block<3, 1>(3 * p, 0);
+			t_v.transposeInPlace();
+			mesh.row(p) = t_v;
+		}
+
+		Eigen::MatrixXd v_hat;
+		Eigen::MatrixXd q_deformation;
+		Eigen::MatrixXd q_determinant;
+		q_determinant.resize(1, FACES);
+		q_determinant.setZero();
+		q_deformation.resize(3 * FACES, 3);
+		v_hat = GetOneModelTransformation(mesh, facets);//shape(3*F,3)
+
+		//论文公式（4）
+		Eigen::Matrix3d deformation_f, inverse_f, deformation;
+		for (int i = 0; i < FACES; ++i)
+		{
+			deformation_f = v_hat.block<3, 3>(3 * i, 0);
+			inverse_f = v_inverse.block<3, 3>(3 * i, 0);
+			deformation = deformation_f * inverse_f;
+			q_deformation.block<3, 3>(3 * i, 0) = deformation;
+			q_determinant(0, i) = deformation.determinant();
+		}
+
+		//cout << "q_deformation: " << endl;
+		//cout << q_deformation.topRows(9) << endl;
+
+		q_deformation.transposeInPlace();
+		q_deformation.resize(1, 9 * FACES);
+
+		//cout << "q_deformation---------" << endl;
+		//cout << q_deformation.leftCols(90) << endl;
+
+		Q_transformation.row(i) = q_deformation;
+		Q_determinant.row(i) = q_determinant;
+	}
+	//cout << Q_transformation.leftCols(9) << endl;
+	//cout << Q_determinant.leftCols(1) << endl;
+	//cout << "dd" << endl;
+	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "Q_determinant").c_str(), Q_determinant);
+	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "Q_transformation").c_str(), Q_transformation);
+
+	cout << Q_transformation.row(0).leftCols(9) << endl;
+
+	mean_deform.resize(1, FACES * 9);
+	std_deform.resize(1, FACES * 9);
+	for (int i = 0; i < FACES * 9; ++i)
+	{
+		//Q_trans :shape（num_models, 9*FACES）.
+		mean_deform(0, i) = Q_transformation.col(i).mean();
+		std_deform(0, i) = CalcStd(Q_transformation.col(i), mean_deform(0, i));
+	}
+
+	//cout << "mean_deform.leftCols(9)" << endl;
+	//cout << mean_deform.leftCols(9) << endl;
+	//mean_deform.resize(3 * FACES, 3);
+	//cout << mean_deform.topRows(6) << endl;
+	//std_deform.resize(3 * FACES, 3);
+	//cout << std_deform.topRows(6) << endl;
+
+	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "mean_deform").c_str(), mean_deform);
+	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "std_deform").c_str(), std_deform);
+
+	cout << "Save data spend: " << (double)(clock() - t) / CLOCKS_PER_SEC << "seconds." << endl;
+}
+Eigen::MatrixXd Reshaper::GetOneModelTransformation(Eigen::MatrixXd &deformed_mesh, const Eigen::Matrix3Xi &facets)
+{
+	//cout << "Start Calc OneModelTransAndDets..." << endl;
+	clock_t t = clock();
+
+	Eigen::MatrixXd v_edge_deformed(3 * FACES, 3);
+	// i为三角面片的下标
+	for (int i = 0; i < FACES; ++i)
+	{
+		Eigen::Vector3d v_deformed[4];
+		for (int j = 0; j < 3; ++j)
+		{
+			//idx为顶点的下标
+			int idx_deformed[3];
+			idx_deformed[j] = facets(j, i);
+
+			//k 表示顶点的x,y,z坐标
+			for (int k = 0; k < 3; ++k)
+			{
+				v_deformed[j](k) = deformed_mesh(idx_deformed[j], k);
+			}
+		}
+
+		//虚构第四个顶点，论文的公式（1）
+		Eigen::Vector3d edge1_derformed = v_deformed[1] - v_deformed[0];
+		Eigen::Vector3d edge2_derformed = v_deformed[2] - v_deformed[0];
+		Eigen::Vector3d edge3_derformed = edge1_derformed.cross(edge2_derformed);
+		double edge3_derformed_norm = edge3_derformed.norm();
+		Eigen::Vector3d v_cross = edge3_derformed.array() / std::sqrt(edge3_derformed_norm);
+		v_deformed[3] = v_deformed[0] + v_cross;
+
+		//建立边组成的矩阵，论文的公式（3）
+		//V_j = [v_i2 - v_i1	v_i3 - v_i1  v_i4 - v_i1]
+		Eigen::Matrix3d v_edge_deformed_;
+		for (int i = 0; i < 3; ++i)
+		{
+			v_edge_deformed_.col(i) = v_deformed[i + 1] - v_deformed[0];
+		}
+		//分块保存
+		v_edge_deformed.block<3, 3>(i * 3, 0) = v_edge_deformed_;
+	}
+	//cout << "Calculate TransAndDets spend: " << (double)(clock() - t) / CLOCKS_PER_SEC << "seconds." << endl;
+	//cout << "v_edge_deformed:   -----" << endl;
+	//cout << v_edge_deformed.topRows(30) << endl;
+	return v_edge_deformed;
+}
+
+double Reshaper::CalcVariance(const Eigen::MatrixXd &x, const double average)
+{
+	double sum = 0.0;
+	int len = x.rows();
+	for (int i = 0; i < len; ++i)
+	{
+		sum += pow(x(i, 0) - average, 2);
+	}
+	return sum / len;
+}
+
+double Reshaper::CalcStd(const Eigen::MatrixXd &x, const double average)
+{
+	double variance = CalcVariance(x, average);
+	return sqrt(variance);
+}
+
+void Reshaper::GetTransformationBasis(Eigen::MatrixXd &transformation, Eigen::MatrixXd &coefficient, Eigen::MatrixXd &basis)
+{
+	cout << "Start GetTransBasis ..." << endl;
+	clock_t t = clock();
+
+	int numModels = transformation.rows();
+	Eigen::MatrixXd mean_deform, std_deform;
+
+	binaryio::ReadMatrixBinaryFromFile((BIN_DATA_PATH + "mean_deform").c_str(), mean_deform);
+	binaryio::ReadMatrixBinaryFromFile((BIN_DATA_PATH + "std_deform").c_str(), std_deform);
+
+	//mean_deform.resize(FACES, 9);
+	//cout << mean_deform.topRows(9) << endl;
+
+	//cout << mean_deform.leftCols(9) << endl;
+	//cout << std_deform.leftCols(9) << endl;
+
+	Eigen::MatrixXd temp = transformation.row(0);
+	//cout << "temp.leftCols(9)" << endl;
+	//cout << temp.leftCols(90) << endl;
+	for (int i = 0; i < numModels; ++i)
+	{
+		transformation.row(i) = transformation.row(i) - mean_deform;
+		transformation.row(i) = transformation.row(i).cwiseQuotient(std_deform);
+		//for (int j = 0; j < transformation.cols(); ++j)
+		//{
+		//	transformation(i, j) /= std_deform(0, j);
+		//}
+	}
+
+	//temp.resize(3 * FACES, 3);
+	//cout << "temp.topRows(9)" << endl;
+	//cout << temp.topRows(9) << endl;
+
+	//cout << "transformation.leftCols(9)" << endl;
+	//cout << transformation.leftCols(9) << endl;
+
+	Eigen::MatrixXd d = transformation.transpose();	//shape(9F,model_num)
+
+	//cout << "d.topRows(9)" << endl;
+	//cout << d.topRows(90) << endl;
+
+	JacobiSVD<MatrixXd> svd(d, ComputeThinU | ComputeThinV);
+	Eigen::MatrixXd d_basis_t = svd.matrixU();
+
+	basis = d_basis_t.leftCols(BASIS_NUM);
+	//Eigen::VectorXd sign(10);
+	//sign << -1, -1, -1, -1, -1, -1, 1, -1, 1, -1;
+
+	//for (int i = 0; i < 9 * FACES; ++i)
+	//{
+	//	basis.row(i) = (basis.row(i)).cwiseProduct(sign.transpose().eval());
+	//}
+
+	//cout << "basis.topRows(9)" << endl;
+	//cout << basis.topRows(9) << endl;
+
+	basis.resize(9 * FACES, BASIS_NUM);
+
+	//cout << basis.topRows(9) << endl;
+	Eigen::MatrixXd d_basisT = basis.transpose();
+	//cout << d_basisT.leftCols(9) << endl;
+
+	coefficient = d_basisT * d;
+	//cout << coefficient << endl;
+	//shape(10, 20)
+	//printShape(coefficient);
+	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "basis").c_str(), basis);
+	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "coefficient").c_str(), coefficient);
+	cout << "GetTransBasis spend: " << (double)(clock() - t) / CLOCKS_PER_SEC << "seconds." << endl;
+}
+
+
+void Reshaper::GetMeasure2Deform(Eigen::MatrixXd &coefficient, Eigen::MatrixXd &measurelist, Eigen::MatrixXd &measure2deform)
+{
+	int num_measure = measurelist.rows();
+	int num_models = measurelist.cols();
+	Eigen::SparseMatrix<double> M(BASIS_NUM * num_models, BASIS_NUM * num_measure);
+
+	//直接resize会导致按列先序
+	coefficient.transposeInPlace();
+	coefficient.resize(coefficient.size(), 1);
+
+	Eigen::MatrixXd d = coefficient;
+	typedef Triplet<double> Tri;
+	std::vector<Tri> triplets;
+	for (int i = 0; i < num_models; ++i)
+	{
+		for (int j = 0; j < BASIS_NUM; ++j)
+		{
+			for (int k = 0; k < 19; ++k)
+			{
+				triplets.push_back((Tri(BASIS_NUM * i + j, j * 19 + k, measurelist.coeff(k, i))));
+			}
+		}
+	}
+	M.setFromTriplets(triplets.begin(), triplets.end());
+
+	SparseLU<Eigen::SparseMatrix<double>> lu((M.transpose())*M);
+	measure2deform = lu.solve((M.transpose())*(d));
+
+	measure2deform.resize(num_measure, BASIS_NUM);
+	measure2deform.transposeInPlace();
+
+	cout << measure2deform << endl;
+	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "measure2deform").c_str(), measure2deform);
+
+	//cout << ans << endl;
+	//printShape(ans);
+}
