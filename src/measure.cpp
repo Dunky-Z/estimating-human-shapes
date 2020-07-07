@@ -18,8 +18,9 @@ Measure::~Measure() { }
 *@param[in]  const Eigen::Matrix3Xd & vertices  一个模型的所有顶点信息
 *@param[in]  const Eigen::Matrix3Xi & facets  三角面片的信息
 *@return     Eigen::MatrixXd
-*/Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<double>>>& control_points, const Eigen::Matrix3Xd & vertices,
-	const Eigen::Matrix3Xi &facets)
+*/
+Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<double>>>& control_points, const Eigen::Matrix3Xd & vertices,
+	const Eigen::Matrix3Xi &facets, Eigen::MatrixX3f circum, int index)
 {
 
 	//cout << "start calculate measure..." << endl;
@@ -63,7 +64,7 @@ Measure::~Measure() { }
 		//用凸包计算出来的围长替换之前的测地距离
 		if (idx == 4 || idx == 5 || idx == 6)
 		{
-			//measure_list(idx++) = circumferences[idx - 4] * 1000;
+			measure_list(idx++) = circum.coeff(index, idx - 4) * 1000;
 			continue;
 		}
 		double length = 0.0;
@@ -124,7 +125,7 @@ double Measure::CalcStd(const Eigen::MatrixXd &x, const double average)
 *@param[in]  Eigen::MatrixXd & measure_lists  测量数据矩阵 shape(19, num_model)
 *@return     void
 */void Measure::ConvertMeasure(const Eigen::MatrixXd & all_vertices, const Eigen::Matrix3Xi &facets,
-	const std::vector<std::vector<std::vector<double>>>& control_points, Eigen::MatrixXd &measure_lists)
+	const std::vector<std::vector<std::vector<double>>>& control_points, Eigen::MatrixXd &measure_lists, Eigen::MatrixX3f circum, int index)
 {
 	cout << "Start convert measure..." << endl;
 
@@ -138,7 +139,7 @@ double Measure::CalcStd(const Eigen::MatrixXd &x, const double average)
 		cout << i << endl;
 		verts = all_vertices.col(i);
 		verts.resize(3, 12500);
-		measure_list = measure.CalcMeasure(control_points, verts, facets);
+		measure_list = measure.CalcMeasure(control_points, verts, facets, circum, i);
 		measure_lists.col(i) = measure_list;
 	}
 	Eigen::MatrixXd mean_measure, std_measure;
@@ -460,7 +461,7 @@ void Measure::CalcCircumferencesAndSave()
 	std::string trainModelPath = DATASET_PATH;
 	std::vector<std::string> trainFiles = GetFiles(trainModelPath + "*");
 	Eigen::MatrixX3f circum;
-	circum.resize(trainFiles.size(),3);
+	circum.resize(trainFiles.size(), 3);
 	int idx = 0;
 	for (auto & file_name : trainFiles)
 	{
@@ -472,8 +473,7 @@ void Measure::CalcCircumferencesAndSave()
 		{
 			row_(i) = circum_t[i];
 		}
-		circum.block(idx,0,1,3) = row_;
+		circum.block(idx, 0, 1, 3) = row_;
 	}
 	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "circumferences").c_str(), circum);
-	cout << circum.rows() << "   " << circum.cols() << endl;
 }

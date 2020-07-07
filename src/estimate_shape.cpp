@@ -10,7 +10,6 @@ Estimate::~Estimate()
 {
 }
 
-
 void Estimate::Apply()
 {
 	//std::vector<float> scale_set;
