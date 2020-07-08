@@ -21,6 +21,7 @@ int main()
 
 
 	//measure.CalcCircumferencesAndSave();
+
 	Eigen::MatrixX3f circum;
 	binaryio::ReadMatrixBinaryFromFile((BIN_DATA_PATH + "circumferences").c_str(), circum);
 
@@ -54,9 +55,55 @@ int main()
 
 
 	//已知人体参数和尺寸参数求对应的Deformation
-	Eigen::MatrixXd measure2deform;
-	reshaper.GetMeasure2Deform(coefficient, measurelist, measure2deform);
-	//common::read_matrix_binary_from_file((BIN_DATA_PATH +"measure2deform").c_str(), measure2deform);
+	//Eigen::MatrixXd measure2deform;
+	//reshaper.GetMeasure2Deform(coefficient, measurelist, measure2deform);
+	//binaryio::ReadMatrixBinaryFromFile((BIN_DATA_PATH +"measure2deform").c_str(), measure2deform);
+
+
+	//构建大型系数矩阵A
+	Eigen::SparseMatrix<double> A; (3 * facets.cols(), 12500);//(3F, VERTS)
+	reshaper.ConstructMatrix(undeform_mesh_, facets, A);
+
+	//输入尺寸信息
+	Eigen::MatrixXd input_measure_norm(19, 1), input_measure(19, 1);
+	input_measure <<
+		4698.85,
+		1795.61,
+		460.47,
+		1212.81,
+		1098.78,
+		1134.35,
+		890.41,
+		823.41,
+		419.05,
+		824.58,
+		1126.35,
+		1199.55,
+		1336.46,
+		649.92,
+		623.889,
+		204.25,
+		1313.27,
+		442.89,
+		726.47;
+
+	/*----------------------------------*/
+	//调用python脚本，预测尺寸信息
+	py::scoped_interpreter python;
+
+	//py::module py_test = py::module::import("reshaper");
+
+	//py::object result = py_test.attr("predict")(input_measure);
+
+	//Eigen::MatrixXd output_measure = result.cast<Eigen::MatrixXd>();
+	//std::cout << "In c++ \n" << output_measure << std::endl;
+	/*----------------------------------*/
+
+	//采用全局映射法
+	//GlobalMapping(input_measure_norm, A, facets);
+
+	//采用递归消除-局部映射
+	reshaper.RFEMapping(input_measure, A, facets);
 
 	cout << "Main spend : " << (double)(clock() - t) / CLOCKS_PER_SEC << "seconds!" << endl;
 	getchar();

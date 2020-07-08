@@ -20,7 +20,7 @@ Measure::~Measure() { }
 *@return     Eigen::MatrixXd
 */
 Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<double>>>& control_points, const Eigen::Matrix3Xd & vertices,
-	const Eigen::Matrix3Xi &facets, Eigen::MatrixX3f circum, int index)
+	const Eigen::Matrix3Xi &facets, Eigen::MatrixX3f& circum, int index)
 {
 
 	//cout << "start calculate measure..." << endl;
@@ -64,7 +64,8 @@ Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<d
 		//用凸包计算出来的围长替换之前的测地距离
 		if (idx == 4 || idx == 5 || idx == 6)
 		{
-			measure_list(idx++) = circum.coeff(index, idx - 4) * 1000;
+			float t = circum.coeff(index, idx - 4) * 1000;
+			measure_list(idx++) = t;
 			continue;
 		}
 		double length = 0.0;
@@ -125,7 +126,7 @@ double Measure::CalcStd(const Eigen::MatrixXd &x, const double average)
 *@param[in]  Eigen::MatrixXd & measure_lists  测量数据矩阵 shape(19, num_model)
 *@return     void
 */void Measure::ConvertMeasure(const Eigen::MatrixXd & all_vertices, const Eigen::Matrix3Xi &facets,
-	const std::vector<std::vector<std::vector<double>>>& control_points, Eigen::MatrixXd &measure_lists, Eigen::MatrixX3f circum)
+	const std::vector<std::vector<std::vector<double>>>& control_points, Eigen::MatrixXd &measure_lists, Eigen::MatrixX3f& circum)
 {
 	cout << "Start convert measure..." << endl;
 
@@ -134,6 +135,7 @@ double Measure::CalcStd(const Eigen::MatrixXd &x, const double average)
 	Eigen::MatrixXd measure_list;
 	Eigen::MatrixXd verts;
 	measure_lists.resize(19, all_vertices.cols());
+
 	for (int i = 0; i < all_vertices.cols(); ++i)
 	{
 		verts = all_vertices.col(i);
@@ -472,7 +474,8 @@ void Measure::CalcCircumferencesAndSave()
 		{
 			row_(i) = circum_t[i];
 		}
-		circum.block(idx, 0, 1, 3) = row_;
+		circum.block(idx++, 0, 1, 3) = row_;
 	}
+
 	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "circumferences").c_str(), circum);
 }

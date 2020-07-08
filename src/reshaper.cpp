@@ -620,7 +620,10 @@ void Reshaper::GetMeasure2Deform(Eigen::MatrixXd &coefficient, Eigen::MatrixXd &
 	M.setFromTriplets(triplets.begin(), triplets.end());
 
 	SparseLU<Eigen::SparseMatrix<double>> lu((M.transpose())*M);
-	measure2deform = lu.solve((M.transpose())*(d));
+	if (lu.info() == Eigen::Success)
+	{
+		measure2deform = lu.solve((M.transpose())*(d));
+	}
 
 	measure2deform.resize(num_measure, BASIS_NUM);
 	measure2deform.transposeInPlace();
@@ -630,4 +633,138 @@ void Reshaper::GetMeasure2Deform(Eigen::MatrixXd &coefficient, Eigen::MatrixXd &
 
 	//cout << ans << endl;
 	//printShape(ans);
+}
+
+void Reshaper::ConstructMatrix(const Eigen::MatrixXd &undeform_mesh_, const Eigen::Matrix3Xi &facets, Eigen::SparseMatrix<double> &A)
+{
+	A.resize(3 * FACES, VERTS);
+	Eigen::Vector3d V_undeformed_target[3];
+	typedef Triplet<double> Tri;
+	std::vector<Tri> triplets;
+
+	for (int j = 0; j < FACES; ++j)
+	{
+		for (int i = 0; i < 3; ++i)
+		{
+			//idx为顶点的下标
+			int index[3];
+			index[i] = facets(i, j);
+
+			//k 表示顶点的x,y,z坐标
+			for (int k = 0; k < 3; ++k)
+			{
+				V_undeformed_target[i](k) = undeform_mesh_(index[i], k);
+			}
+		}
+
+		Eigen::MatrixXd w(3, 2);
+		for (int i = 0; i < 2; ++i)
+		{
+			w.col(i) = V_undeformed_target[i + 1] - V_undeformed_target[0];
+		}
+
+		//文档公式（7）计算QR分解
+		Eigen::MatrixXd Q(3, 3);	//正交矩阵
+		Eigen::MatrixXd R(3, 2);	//上三角矩阵
+		R.setZero();
+		Eigen::MatrixXd Q_block(3, 2);
+		Eigen::MatrixXd R_block(2, 2);
+		QRFactorize(w, Q, R);
+		Q_block = Q.block(0, 0, 3, 2);
+		R_block = R.block(0, 0, 2, 2);
+
+		//文档公式（8）
+		Eigen::MatrixXd T(2, 3);
+		T = R_block.inverse()*(Q_block.transpose());
+
+		int index_target[3];	//顶点下标
+		for (int i = 0; i < 3; ++i)
+		{
+			index_target[i] = facets(i, j);
+		}
+
+		for (int i = 0; i < 3; ++i)
+		{
+			triplets.push_back(Tri(3 * j + i, index_target[1], T.coeff(0, i)));
+			triplets.push_back(Tri(3 * j + i, index_target[2], T.coeff(1, i)));
+			triplets.push_back(Tri(3 * j + i, index_target[0], -T.coeff(0, i) - T.coeff(1, i)));
+		}
+	}
+	A.setFromTriplets(triplets.begin(), triplets.end());
+	//common::write_matrix_binary_to_file("./data/train/A", A);
+}
+
+void Reshaper::QRFactorize(const Eigen::MatrixXd &a, Eigen::MatrixXd &q, Eigen::MatrixXd &r)
+{
+	int i, j, imax, jmax;
+	imax = a.rows();
+	jmax = a.cols();
+
+	for (j = 0; j < jmax; j++)
+	{
+		Eigen::VectorXd v(a.col(j));
+		for (i = 0; i < j; i++)
+		{
+			Eigen::VectorXd qi(q.col(i));
+			r(i, j) = qi.dot(v);
+			v = v - r(i, j)*qi;
+		}
+		float vv = (float)v.squaredNorm();
+		float vLen = sqrtf(vv);
+		if (vLen < EPSILON)
+		{
+			r(j, j) = 1;
+			q.col(j).setZero();
+		}
+		else
+		{
+			r(j, j) = vLen;
+			q.col(j) = v / vLen;
+		}
+	}
+}
+
+void Reshaper::Synthesize(Eigen::SparseMatrix<double> A, Eigen::MatrixXd deform, Eigen::Matrix3Xi &facets)
+{
+	cout << "Start Synthesize..." << endl;
+	//deform.resize(deform.size(), 1);
+	//printShape(deform);//(225000,1)(9F,1)
+	Eigen::MatrixXd X(VERTS, 3);
+
+	//printShape(A); //(75000,125000)
+	//cout << A.block(0, 0, 1000, 100) << endl;
+	Eigen::SparseMatrix<double> t = A.transpose()*A;
+	//printShape(t);
+	//cout << t.block(0, 0, 100, 100) << endl;
+	Eigen::SparseLU<Eigen::SparseMatrix<double>> lu(t);
+
+	X.col(0) = lu.solve(A.transpose()*(deform.col(0)));
+	X.col(1) = lu.solve(A.transpose()*(deform.col(1)));
+	X.col(2) = lu.solve(A.transpose()*(deform.col(2)));
+
+	X.transposeInPlace();
+
+	//将文件名改为当前时间，每次运行不用改文件名，方法比较低级，还需要改进TODO
+	time_t now_time = time(NULL);
+	std::string file_name = string(asctime(localtime(&now_time)));
+	//获取的时间Sat Apr 25 16:49:47 2020
+	replace(file_name.begin(), file_name.end(), ':', '-');
+	replace(file_name.begin(), file_name.end(), '\0', ' ');
+	replace(file_name.begin(), file_name.end(), '\n', ' ');
+	meshio::SaveObj((BIN_DATA_PATH + file_name + ".obj").c_str(), X, facets);
+
+	cout << "Synthesize finished!" << endl;
+}
+
+void Reshaper::RFEMapping(Eigen::MatrixXd input_measure, Eigen::SparseMatrix<double> A, Eigen::Matrix3Xi &facets)
+{
+	//调用python脚本，预测尺寸信息
+	//py::scoped_interpreter python;
+	py::module py_test = py::module::import("reshaper");
+	py::object result = py_test.attr("mapping_rfemat")(input_measure);
+
+	//Eigen::MatrixXd output_measure = result.cast<Eigen::MatrixXd>();
+	Eigen::MatrixXd deform = result.cast<Eigen::MatrixXd>();
+	cout << deform.topRows(9) << endl;
+	Synthesize(A, deform, facets);
 }

@@ -4,12 +4,18 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
+#include <Python.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
+#include <pybind11/eigen.h>
 #include <unsupported/Eigen/SparseExtra>
 #include <unsupported/Eigen/KroneckerProduct>
 
 #include "utils.h"
 #include "mesh_io.h"
 #include "binary_io.h"
+
+namespace py = pybind11;
 
 
 class Reshaper
@@ -33,6 +39,11 @@ public:
 	Eigen::MatrixXd Reshaper::GetOneModelTransformation(Eigen::MatrixXd &deformed_mesh, const Eigen::Matrix3Xi &facets);
 	void GetTransformationBasis(Eigen::MatrixXd &transformation, Eigen::MatrixXd &coefficient, Eigen::MatrixXd &basis);
 	void Reshaper::GetMeasure2Deform(Eigen::MatrixXd &coefficient, Eigen::MatrixXd &measurelist, Eigen::MatrixXd &measure2deform);
+	void ConstructMatrix(const Eigen::MatrixXd &undeform_mesh_, const Eigen::Matrix3Xi &facets, Eigen::SparseMatrix<double> &A);
+	void QRFactorize(const Eigen::MatrixXd &a, Eigen::MatrixXd &q, Eigen::MatrixXd &r);
+
+	void Reshaper::Synthesize(Eigen::SparseMatrix<double> A, Eigen::MatrixXd deform, Eigen::Matrix3Xi &facets);
+	void Reshaper::RFEMapping(Eigen::MatrixXd input_measure, Eigen::SparseMatrix<double> A, Eigen::Matrix3Xi &facets);
 private:
 
 };
