@@ -65,7 +65,7 @@ Reshaper::~Reshaper() {}
 *@param[in]  std::vector<std::vector<std::vector<double>>> & control_points  [尺寸个数，每个尺寸包含的控制点，每个控制点]
 *@param[in]  const char * filename
 *@param[in]  const std::string & path
-*@param[in]  const std::vector<std::string> & files
+*@param[in]  const std::vector<std::string> & files [19个尺寸相关的顶点]
 *@return     void
 */
 void Reshaper::SaveBinEdge(std::vector<std::vector<std::vector<double>>>& control_points, std::vector<std::vector<int>> &point_idx)
