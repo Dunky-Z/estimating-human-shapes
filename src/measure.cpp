@@ -57,17 +57,25 @@ Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<d
 	double weight = kHumanbodyIntensity * vol;
 	weight = pow(weight, 1.0 / 3.0) * 1000;
 	measure_list(0) = weight;
-	int idx = 1;
+	//int idx = 1;
+	int idx = 0, t = 0;
+
 	//measures[i][j]  第i行数据， j列数据为顶点序号
 	for (auto & measures : control_points)
 	{
 		//用凸包计算出来的围长替换之前的测地距离
-		if (idx == 4 || idx == 5 || idx == 6)
-		{
-			float t = circum.coeff(index, idx - 4) * 1000;
-			measure_list(idx++) = t;
+		//if (idx == 4 || idx == 5 || idx == 6)
+		//{
+		//	float t = circum.coeff(index, idx - 4) * 1000;
+		//	measure_list(idx++) = t;
+		//	continue;
+		//}
+		if (t == 2 || t == 3 || t == 4)
+		{	
+			t++;
 			continue;
 		}
+		t++;
 		double length = 0.0;
 		Eigen::Vector3d p1, p2;
 		p2 = vertices.col(measures[0][1]);
@@ -111,6 +119,7 @@ Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<d
 	}
 	return sum / len;
 }
+
 double Measure::CalcStd(const Eigen::MatrixXd &x, const double average)
 {
 	double variance = CalcVariance(x, average);
@@ -134,7 +143,7 @@ double Measure::CalcStd(const Eigen::MatrixXd &x, const double average)
 	Measure measure;
 	Eigen::MatrixXd measure_list;
 	Eigen::MatrixXd verts;
-	measure_lists.resize(19, all_vertices.cols());
+	measure_lists.resize(M_NUM, all_vertices.cols());
 
 	for (int i = 0; i < all_vertices.cols(); ++i)
 	{
@@ -144,10 +153,10 @@ double Measure::CalcStd(const Eigen::MatrixXd &x, const double average)
 		measure_lists.col(i) = measure_list;
 	}
 	Eigen::MatrixXd mean_measure, std_measure;
-	mean_measure.resize(19, 1);
-	std_measure.resize(19, 1);
+	mean_measure.resize(M_NUM, 1);
+	std_measure.resize(M_NUM, 1);
 
-	for (int i = 0; i < 19; ++i)
+	for (int i = 0; i < M_NUM; ++i)
 	{
 		mean_measure(i, 0) = measure_lists.row(i).mean();
 		std_measure(i, 0) = CalcStd(measure_lists.row(i), mean_measure(i, 0));

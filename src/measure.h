@@ -11,7 +11,7 @@ using namespace std;
 class Measure
 {
 private:
-	static const int M_NUM = 19;
+	static const int M_NUM = 15;
 	const std::vector<int> cir_index = { 8791  ,7233 ,5333 };//4-Chest,5-Belly button waist,6-Gluteal hip
 
 

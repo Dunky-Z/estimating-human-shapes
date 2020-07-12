@@ -611,9 +611,9 @@ void Reshaper::GetMeasure2Deform(Eigen::MatrixXd &coefficient, Eigen::MatrixXd &
 	{
 		for (int j = 0; j < BASIS_NUM; ++j)
 		{
-			for (int k = 0; k < 19; ++k)
+			for (int k = 0; k < M_NUM; ++k)
 			{
-				triplets.push_back((Tri(BASIS_NUM * i + j, j * 19 + k, measurelist.coeff(k, i))));
+				triplets.push_back((Tri(BASIS_NUM * i + j, j * M_NUM + k, measurelist.coeff(k, i))));
 			}
 		}
 	}

@@ -45,5 +45,5 @@ public:
 	void Reshaper::Synthesize(Eigen::SparseMatrix<double> A, Eigen::MatrixXd deform, Eigen::Matrix3Xi &facets);
 	void Reshaper::RFEMapping(Eigen::MatrixXd input_measure, Eigen::SparseMatrix<double> A, Eigen::Matrix3Xi &facets);
 private:
-
+	const int M_NUM = 15;
 };

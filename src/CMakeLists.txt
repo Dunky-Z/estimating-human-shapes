@@ -18,7 +18,8 @@ include_directories("D:/Lib/pmp-library-debug/include")
 
 #find_package(GLFW REQUIRED)
 
-add_executable(estimating-human-shapes testpmp.cpp estimate_shape.cpp main.cpp  measure.cpp reshaper.cpp  mesh_io.cpp utils.cpp measure.h estimate_shape.h utils.h binary_io.h reshaper.h mesh_io.h utils.h)
+add_executable(estimating-human-shapes testpmp.cpp estimate_shape.cpp main.cpp  measure.cpp reshaper.cpp  mesh_io.cpp utils.cpp measure.h estimate_shape.h utils.h binary_io.h reshaper.h mesh_io.h utils.h 
+../alglib/cpp/src/ap.h ../alglib/cpp/src/linalg.h ../alglib/cpp/src/alglibinternal.h ../alglib/cpp/src/alglibmisc.h testalglib.cpp)
 #target_link_libraries(estimating-human-shapes pmp)
 target_link_libraries(estimating-human-shapes Eigen3::Eigen)
 target_link_libraries(estimating-human-shapes debug "D:/Lib/pmp-library-debug/lib/pmp.lib")

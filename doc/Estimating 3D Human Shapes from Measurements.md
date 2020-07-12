@@ -134,3 +134,6 @@ Graham's Scan尝试先将所有点依照时针顺序排好，再来做绕行-圈
 
 ## 问题
 生成凸包算法，可能toleft检测有些问题，最后的结果不太对。
+
+
+更改了CalcMeasure  idx ds
