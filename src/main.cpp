@@ -110,36 +110,3 @@ int main()
 	getchar();
 	return 0;
 }
-
-
-
-Eigen::Matrix3Xd verts;
-Eigen::Matrix3Xi faces;
-Eigen::MatrixXd input_measure;
-std::vector<std::vector<int>> point_idx;
-
-int main() 
-{
-	Estimate estimate;
-	Reshaper reshaper;
-	Measure measure;
-	meshio::ReadObj(ori_mesh_path, verts, faces);
-	alglib::real_1d_array xx;
-	xx.attach_to_ptr(verts.cols() * 3, verts.data());
-	double f(0.0);
-	alglib::real_1d_array g;
-	grad_function(xx, f, g, nullptr);
-
-
-}
-
-void grad_function(const alglib::real_1d_array& x, double& func, alglib::real_1d_array& grad, void* ptr)
-{
-	alglib::real_1d_array temp(x);
-	Eigen::Map<Matrix3Xd> vertices(temp.getcontent(), 3, verts.cols());
-	func = 0.0;
-	Eigen::VectorXd Gradient;
-	Gradient.setConstant(vertices.cols() * 3, 0);
-	Estimate estimate;
-	estimate.CalcEuclideanGradient(Gradient)
-}

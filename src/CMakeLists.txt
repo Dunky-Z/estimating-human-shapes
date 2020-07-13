@@ -21,7 +21,7 @@ include_directories("D:/Lib/pmp-library-debug/include")
 add_executable(estimating-human-shapes testpmp.cpp estimate_shape.cpp main.cpp  measure.cpp reshaper.cpp  mesh_io.cpp utils.cpp measure.h estimate_shape.h utils.h binary_io.h reshaper.h mesh_io.h utils.h 
 ../alglib/cpp/src/ap.h ../alglib/cpp/src/linalg.h ../alglib/cpp/src/alglibinternal.h ../alglib/cpp/src/alglibmisc.h testalglib.cpp ../alglib/cpp/src/stdafx.h ../alglib/cpp/src/linalg.cpp
 ../alglib/cpp/src/ap.cpp ../alglib/cpp/src/alglibmisc.cpp  ../alglib/cpp/src/alglibinternal.cpp
-../alglib/cpp/src/solvers.cpp ../alglib/cpp/src/solvers.h ../alglib/cpp/src/optimization.cpp ../alglib/cpp/src/optimization.h fit_measurements.cpp)
+../alglib/cpp/src/solvers.cpp ../alglib/cpp/src/solvers.h ../alglib/cpp/src/optimization.cpp ../alglib/cpp/src/optimization.h fit_measurements.cpp fit_measurements.h)
 #target_link_libraries(estimating-human-shapes pmp)
 target_link_libraries(estimating-human-shapes Eigen3::Eigen)
 target_link_libraries(estimating-human-shapes debug "D:/Lib/pmp-library-debug/lib/pmp.lib")

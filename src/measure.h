@@ -24,6 +24,8 @@ public:
 	double CalcStd(const Eigen::MatrixXd &x, const double average);
 	Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<double>>>& control_points, const Eigen::Matrix3Xd & vertices,
 		const Eigen::Matrix3Xi &facets, Eigen::MatrixX3f& circum, int index);
+	Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<double>>>& control_points, const Eigen::Matrix3Xd & vertices,
+		const Eigen::Matrix3Xi &facets);
 	void Measure::ConvertMeasure(const Eigen::MatrixXd & all_vertices, const Eigen::Matrix3Xi &facets,
 		const std::vector<std::vector<std::vector<double>>>& control_points, Eigen::MatrixXd &measure_lists, Eigen::MatrixX3f& circum);
 	float orientation(const pmp::vec3& p, const pmp::vec3& q, const pmp::vec3& r);

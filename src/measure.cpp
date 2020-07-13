@@ -103,6 +103,63 @@ Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<d
 	//cout << measure_list.cols() << endl;;
 }
 
+Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<double>>>& control_points, const Eigen::Matrix3Xd & vertices,
+	const Eigen::Matrix3Xi &facets)
+{
+
+	//cout << "start calculate measure..." << endl;
+	//for (int i = 0; i < control_points.size(); ++i)
+	//{
+	//	for (int j = 0; j < control_points[i].size(); ++j)
+	//	{
+	//		for (int k = 0; k < control_points[i][j].size(); ++k)
+	//		{
+	//			cout << control_points[i][j][k] << "  ";
+	//		}
+	//		cout << endl;
+
+	//	}
+	//}
+
+	Eigen::MatrixXd measure_list;
+	measure_list.resize(1, M_NUM);
+
+	int idx = 0, t = 0;
+	//measures[i][j]  第i行数据， j列数据为顶点序号
+	for (auto & measures : control_points)
+	{
+		if (t == 2 || t == 3 || t == 4)
+		{
+			t++;
+			continue;
+		}
+		t++;
+		double length = 0.0;
+		Eigen::Vector3d p1, p2;
+		p2 = vertices.col(measures[0][1]);
+
+		for (int i = 0; i < measures.size(); ++i)
+		{
+			p1 = p2;
+			if (measures[i][0] == 1)
+				p2 = vertices.col(measures[i][1]);
+			else if (measures[i][0] == 2)
+			{
+				p2 = vertices.col(measures[i][1])*measures[i][3] + vertices.col(measures[i][2])*measures[i][4];
+			}
+			else
+			{
+				p2 = vertices.col(measures[i][1])*measures[i][4] + vertices.col(measures[i][2])*measures[i][5] + vertices.col(measures[i][3])*measures[i][6];
+			}
+			length += sqrt((p1 - p2).array().pow(2).sum());
+		}
+		measure_list(idx++) = length * 1000;
+	}
+	//shape : 19,1
+	return measure_list.transpose();
+
+	//cout << measure_list.cols() << endl;;
+}
 /*!
 *@brief  计算方差
 *@param[out]
