@@ -132,8 +132,11 @@ Graham's Scan尝试先将所有点依照时针顺序排好，再来做绕行-圈
 <img src="https://gitee.com//dominic_z/markdown_picbed/raw/master/img/GrahamsScan5.png" width = "40%"/>
 </div>
 
-## 问题
-生成凸包算法，可能toleft检测有些问题，最后的结果不太对。
+####  凸包结果
+
+<div  align="center">    
+<img src="https://gitee.com//dominic_z/markdown_picbed/raw/master/img/acxrygtvjhb ew,fcevwrc.png" width = "40%"/>
+</div>
 
 
 更改了CalcMeasure  idx ds

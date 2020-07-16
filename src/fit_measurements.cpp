@@ -16,7 +16,7 @@ std::vector<std::vector<std::vector<double>>> control_points;
 
 
 int main()
-{
+ {
 	Reshaper reshaper;
 	Measure measure;
 	meshio::ReadObj(ori_mesh_path, verts, faces);
@@ -81,7 +81,6 @@ void grad_function(const alglib::real_1d_array& x, double& func, alglib::real_1d
 	}
 }
 
-
 /*!
 *@brief  计算欧式距离的梯度
 *@param[out]
@@ -106,29 +105,28 @@ void CalcEuclideanGradient(Eigen::VectorXd& gradient, Matrix3Xd vertices)
 }
 
 /*!
-*@brief
-*@param[out]
-*@param[in]  Eigen::MatrixXd & gradient  整体梯度
-*@param[in]  SurfaceMesh & mesh  网格信息
-*@param[in]  std::vector<int> point_idx  相关顶点下标
-*@param[in]  Eigen::MatrixXd & input_measure  目标尺寸
-*@param[in]  Eigen::MatrixXd & measure  当前网格尺寸
-*@return     void
+*@brief  计算测地距离的梯度
+*@param[out] 
+*@param[in]  Eigen::VectorXd & gradient  
+*@param[in]  Matrix3Xd vertices  
+*@param[in]  Eigen::MatrixXd measurements  
+*@return     void  
 */
 void CalcGeodesicGradient(Eigen::VectorXd& gradient, Matrix3Xd vertices, Eigen::MatrixXd measurements)
 {
 	pmp::vec3 grad;
 	//从1开始因为poin_idx[0]是欧式距离
-	for (int i = 1; i < point_idx.size(); ++i)
+	for (size_t i = 1; i < point_idx.size(); ++i)
 	{
-		for (int j = 1; j < point_idx[i].size(); ++j)
+		size_t n = point_idx[i].size();
+		for (size_t j = 1; j <= n; ++j)
 		{
-			int id1 = point_idx[i][j - 1], id2 = point_idx[i][j];
+			int id1 = point_idx[i][(j - 1) % n], id2 = point_idx[i][j % n];
 			pmp::vec3 p1; p1[0] = vertices.coeff(0, id1); p1[1] = vertices.coeff(1, id1); p1[2] = vertices.coeff(2, id1);
 			pmp::vec3 p2; p2[0] = vertices.coeff(0, id2); p2[1] = vertices.coeff(1, id2); p2[2] = vertices.coeff(2, id2);
 			float cur_len = distance(p1, p2);
 			grad = 4 * (std::pow(cur_len, 2) - std::pow(CalcTargetLen(measurements, cur_len, i), 2))*(p1 - p2);
-			for (int k = 0; k < 3; ++k)
+			for (size_t k = 0; k < 3; ++k)
 			{
 				gradient(id1 * 3 + k) += grad[k];
 				gradient(id2 * 3 + k) += -grad[k];
@@ -138,15 +136,14 @@ void CalcGeodesicGradient(Eigen::VectorXd& gradient, Matrix3Xd vertices, Eigen::
 }
 
 /*!
-*@brief  求目标边长
-*@param[out]
-*@param[in]  Eigen::MatrixXd & input_measure  目标总长
-*@param[in]  Eigen::MatrixXd & measure  已知总长
-*@param[in]  const float cur_len  已知边长
+*@brief  计算目标边长
+*@param[out] 
+*@param[in]  Eigen::MatrixXd measurements  
+*@param[in]  const float cur_len  当前网格上这条边长
 *@param[in]  int index  第index个尺寸
-*@return     float
+*@return     float  
 */
-float CalcTargetLen(Eigen::MatrixXd measurements, const float cur_len, int index)
+float CalcTargetLen(Eigen::MatrixXd measurements, const float cur_len, const int index)
 {
 	float target_len = (cur_len / measurements.coeff(index, 0))*(input_m.coeff(index, 0));
 	return target_len;
