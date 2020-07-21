@@ -119,6 +119,7 @@ void Reshaper::SaveBinEdge(std::vector<std::vector<std::vector<double>>>& contro
 			}
 		}
 		point_idx.push_back(point_idx_);
+		SavePointToFile(points_idx_path, point_idx);
 	}
 }
 

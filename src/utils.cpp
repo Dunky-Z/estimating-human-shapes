@@ -7,18 +7,37 @@
 *@param[in]  const std::vector<pmp::vec3> & points
 *@return     int
 */
-//int  SavePointToFile(const std::string &filename, const std::vector<pmp::vec3>& points)
-//{
-//	std::ofstream os(filename.c_str());
-//	if (!os)
-//		return 0;
-//	for (auto& p : points)
-//	{
-//		os << p[0] << " " << p[1] << "\n";
-//	}
-//	os.close();
-//	return 1;
-//}
+int  SavePointToFile(const std::string &filename, const std::vector<pmp::vec3>& points)
+{
+	std::ofstream os(filename.c_str());
+	if (!os)
+		return 0;
+	for (auto& p : points)
+	{
+		os << p[0] << " " << p[1] << "\n";
+	}
+	os.close();
+	return 1;
+}
+
+int  SavePointToFile(const std::string &filename, const std::vector<std::vector<int>>& point_idx)
+{
+	std::ofstream os(filename.c_str());
+	if (!os)
+		return 0;
+	for (auto& m : point_idx)
+	{
+		os << m.size() << "\n";
+		for (auto& id : m)
+		{
+			os << id << " ";
+		}
+		os << "\n";
+	}
+	os.close();
+	return 1;
+}
+
 
 /*!
 *@brief  读取文件夹下所有文件

@@ -24,11 +24,11 @@ int main()
 	Reshaper reshaper;
 	Measure measure;
 	meshio::ReadObj(ori_mesh_path, verts, faces);
-	verts = verts * 10;
+	verts = verts * 100;
 	reshaper.SaveBinControlPoint(control_points);
 	reshaper.SaveBinEdge(control_points, point_idx);
 	input_m << 1795.61, 460.47, 890.41, 823.41, 419.05, 824.58, 1126.35, 1199.55, 1336.46, 649.92, 623.889, 204.25, 1313.27, 442.89, 726.47;
-	input_m = input_m * 10;
+	input_m = input_m * 100;
 	measurements = measure.CalcMeasure(control_points, verts, faces);
 	alglib::real_1d_array xx;
 	xx.attach_to_ptr(verts.cols() * 3, verts.data());
@@ -82,11 +82,14 @@ int main()
 		}
 	}
 
+	std::cout << gradient_t.leftCols(300) << std::endl;
 	//计算能量
 	double energy = 0.0;
 
 	CalcEnergy(energy, verts);
-	std::cout << energy << std::endl;
+
+	std::cout << "-------------------" << endl;
+	//std::cout << energy << std::endl;
 	Eigen::Matrix3Xd t_grad;
 	t_grad.setConstant(3, verts.cols(), 0);
 	for (size_t i = 0; i < verts.cols(); ++i)
@@ -96,33 +99,29 @@ int main()
 			double tmp = 0.0;
 			verts(j, i) += step;
 			CalcEnergy(tmp, verts);
-			cout << tmp << endl;
+			//cout << tmp << endl;
 			t_grad(j, i) = (tmp - energy) / step;
 			verts(j, i) -= step;
 		}
 	}
+	std::cout << t_grad.leftCols(300) << std::endl;
 	std::cout << t_grad - gradient_t << std::endl;
 }
 
-void CalcEnergy(double& energy, Eigen::Matrix3Xd vertices)
+void CalcEnergy(double& energy, Eigen::Matrix3Xd& vertices)
 {
-	int id1 = point_idx[0][0], id2 = point_idx[0][1];
-	pmp::vec3 p1; p1[0] = vertices.coeff(0, id1); p1[1] = vertices.coeff(1, id1); p1[2] = vertices.coeff(2, id1);
-	pmp::vec3 p2; p2[0] = vertices.coeff(0, id2); p2[1] = vertices.coeff(1, id2); p2[2] = vertices.coeff(2, id2);
-
-	double p = std::pow(distance(p1, p2), 2);
-	double l = std::pow(input_m.coeff(0, 0), 2);
-	energy += std::pow(p - l, 2);
-
 	std::cout << setprecision(20);
-	std::cout << std::fixed << energy << std::endl;
 	//从1开始因为poin_idx[0]是欧式距离
-	for (size_t i = 1; i < point_idx.size(); ++i)
+	for (size_t i_ = 1, i = 1; i_ < point_idx.size(); ++i_)
 	{
-		size_t n = point_idx[i].size();
-		for (size_t j = 1; j <= n; ++j)
+		if (i_ == 2 || i_ == 3 || i_ == 4)
 		{
-			id1 = point_idx[i][(j - 1) % n], id2 = point_idx[i][j % n];
+			continue;
+		}
+		size_t n = point_idx[i_].size();
+		for (size_t j = 1; j < n; ++j)
+		{
+			int id1 = point_idx[i_][j - 1], id2 = point_idx[i_][j];
 			pmp::vec3 p1; p1[0] = vertices.coeff(0, id1); p1[1] = vertices.coeff(1, id1); p1[2] = vertices.coeff(2, id1);
 			pmp::vec3 p2; p2[0] = vertices.coeff(0, id2); p2[1] = vertices.coeff(1, id2); p2[2] = vertices.coeff(2, id2);
 			double cur_len = distance(p1, p2);
@@ -130,10 +129,12 @@ void CalcEnergy(double& energy, Eigen::Matrix3Xd vertices)
 			double l = std::pow(CalcTargetLen(measurements, cur_len, i), 2);
 			energy = energy + std::pow(p - l, 2);
 			std::cout << setprecision(15);
-			std::cout << std::fixed << p << "  " << l << "   " << energy << std::endl;
+			//std::cout << std::fixed << p << "  " << l << "  " << energy << std::endl;
 		}
+		i++;
 	}
 }
+
 
 void grad_function(const alglib::real_1d_array& x, double& func, alglib::real_1d_array& grad, void* ptr)
 {
@@ -141,7 +142,7 @@ void grad_function(const alglib::real_1d_array& x, double& func, alglib::real_1d
 	Eigen::Map<Matrix3Xd> vertices(temp.getcontent(), 3, verts.cols());
 	func = 0.0;
 	gradient.setConstant(vertices.cols() * 3, 0);
-	CalcEuclideanGradient(gradient, vertices);
+	//CalcEuclideanGradient(gradient, vertices);
 	CalcGeodesicGradient(gradient, vertices, measurements);
 	for (int i = 0; i < grad.length(); ++i)
 	{
@@ -158,7 +159,7 @@ void grad_function(const alglib::real_1d_array& x, double& func, alglib::real_1d
 *@param[in]  Eigen::MatrixXd & input_measure
 *@return     void
 */
-void CalcEuclideanGradient(Eigen::VectorXd& gradient, Eigen::Matrix3Xd vertices)
+void CalcEuclideanGradient(Eigen::VectorXd& gradient, Eigen::Matrix3Xd& vertices)
 {
 	pmp::vec3 grad;
 	int id1 = point_idx[0][0], id2 = point_idx[0][1];
@@ -180,16 +181,20 @@ void CalcEuclideanGradient(Eigen::VectorXd& gradient, Eigen::Matrix3Xd vertices)
 *@param[in]  Eigen::MatrixXd measurements
 *@return     void
 */
-void CalcGeodesicGradient(Eigen::VectorXd& gradient, Matrix3Xd vertices, Eigen::MatrixXd measurements)
+void CalcGeodesicGradient(Eigen::VectorXd& gradient, Matrix3Xd vertices, Eigen::MatrixXd& measurements)
 {
 	pmp::vec3 grad;
 	//从1开始因为poin_idx[0]是欧式距离
-	for (size_t i = 1; i < point_idx.size(); ++i)
+	for (size_t i_ = 1, i = 1; i_ < point_idx.size(); ++i_)
 	{
-		size_t n = point_idx[i].size();
-		for (size_t j = 1; j <= n; ++j)
+		if (i_ == 2 || i_ == 3 || i_ == 4)
 		{
-			int id1 = point_idx[i][(j - 1) % n], id2 = point_idx[i][j % n];
+			continue;
+		}
+		size_t n = point_idx[i_].size();
+		for (size_t j = 1; j < n; ++j)
+		{
+			int id1 = point_idx[i_][j - 1], id2 = point_idx[i_][j];
 			pmp::vec3 p1; p1[0] = vertices.coeff(0, id1); p1[1] = vertices.coeff(1, id1); p1[2] = vertices.coeff(2, id1);
 			pmp::vec3 p2; p2[0] = vertices.coeff(0, id2); p2[1] = vertices.coeff(1, id2); p2[2] = vertices.coeff(2, id2);
 			float cur_len = distance(p1, p2);
@@ -200,6 +205,7 @@ void CalcGeodesicGradient(Eigen::VectorXd& gradient, Matrix3Xd vertices, Eigen::
 				gradient(id2 * 3 + k) += -grad[k];
 			}
 		}
+		i++;
 	}
 }
 
@@ -211,7 +217,7 @@ void CalcGeodesicGradient(Eigen::VectorXd& gradient, Matrix3Xd vertices, Eigen::
 *@param[in]  int index  第index个尺寸
 *@return     float
 */
-float CalcTargetLen(Eigen::MatrixXd measurements, const float cur_len, const int index)
+float CalcTargetLen(Eigen::MatrixXd& measurements, const float& cur_len, const int& index)
 {
 	float target_len = (cur_len / measurements.coeff(index, 0))*(input_m.coeff(index, 0));
 	return target_len;
