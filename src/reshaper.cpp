@@ -60,7 +60,7 @@ Reshaper::~Reshaper() {}
 }
 
 /*!
-*@brief
+*@brief			保存每个尺寸由哪些边构成
 *@param[out]
 *@param[in]  std::vector<std::vector<std::vector<double>>> & control_points  [尺寸个数，每个尺寸包含的控制点，每个控制点]
 *@param[in]  const char * filename
