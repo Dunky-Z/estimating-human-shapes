@@ -1,0 +1,46 @@
+\documentclass[11pt]{article}
+\usepackage{CJK}
+\usepackage[top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\floatname{algorithm}{Algorithm}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\begin{document}
+\begin{CJK*}{UTF8}{gkai}
+\begin{algorithm}[h]
+    \caption{Calculate Gradient}
+    \begin{algorithmic}[1]
+        \Require
+            v: \text{网格顶点信息}
+      \For{each $i\in [1,9]$}
+        \State initialize a tree $T_{i}$ with only a leaf (the root);
+        \State $T=T\cup T_{i};$
+      \EndFor
+      \ForAll {$c$ such that $c\in RecentMBatch(E_{n-1})$}
+        \label{code:TrainBase:getc}
+        \State $T=T\cup PosSample(c)$;
+        \label{code:TrainBase:pos}
+      \EndFor;
+      \For{$i=0$; $i<n$; $i++$ }
+        \State $//$ Your source here;
+      \EndFor
+      \For{$i=1$ to $n$}
+        \State $//$ Your source here;
+      \EndFor
+      \State $//$ Reusing recent base classifiers.
+      \label{code:recentStart}
+      \While {$(|E_n| \leq L_1 )and( D \neq \phi)$}
+        \State Selecting the most recent classifier $c_i$ from $D$;
+        \State $D=D-c_i$;
+        \State $E_n=E_n+c_i$;
+      \EndWhile
+      \label{code:recentEnd}
+    \end{algorithmic}
+\end{algorithm}
+\end{CJK*}
+\end{document}

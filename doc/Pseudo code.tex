@@ -1,0 +1,38 @@
+\documentclass[11pt]{article}
+\usepackage{CJK}
+\usepackage[top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\floatname{algorithm}{Algorithm}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\begin{document}
+\begin{CJK*}{UTF8}{gkai}
+\begin{algorithm}[h]
+\caption{Calculate Gradient}
+    \begin{algorithmic}[1]
+        \Require
+            $v$: 网格顶点信息;
+            $m$: 测量的尺寸信息;
+            $im$: 输入的尺寸信息;
+            $pId$: 每个尺寸对应的顶点信息
+        \Ensure
+            $G$:梯度
+      \For{$i = 0$; $i < pId.size()$; $++i$ }
+        \For{$j = 0$; $j < pId[i].size() - 1$; $++j$}
+            \State $p_1Id = pId[i][j]$; $p_2Id = pId[i][j+1]$
+            \State $p_1 = v(p_1Id)$; $p_2 = v(p_2Id)$;
+            \State $l = |p_1 - p_2|$;
+            \State $l_t = \frac{im(i)}{m(i)}l$;
+            \State $g$ = 4 * $(l^2 - l_t^2)^2 * (p_1- p_2)$;
+            \State $G(p_1Id) = g$;  $G(p_2Id) = -g$;
+        \EndFor
+      \EndFor
+    \end{algorithmic}
+\end{algorithm}
+\end{CJK*}
+\end{document}

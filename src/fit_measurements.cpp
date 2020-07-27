@@ -108,7 +108,6 @@ int main()
 				std::cout << t_grad.middleCols<10>(280) << std::endl;
 				std::cout << "----" << std::endl;
 			}
-
 			verts(j, i) -= step;
 
 		}
@@ -200,7 +199,7 @@ void CalcGeodesicGradient(Eigen::VectorXd& gradient, Matrix3Xd vertices, Eigen::
 			continue;
 		}
 		size_t n = point_idx[i_].size();
-		for (size_t j = 1; j < n - 1; ++j)
+		for (size_t j = 0; j < n - 1; ++j)
 		{
 			int id1 = point_idx[i_][j], id2 = point_idx[i_][j + 1];
 			//std::cout << id1 << "  " << id2 << std::endl;

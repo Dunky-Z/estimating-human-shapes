@@ -104,7 +104,7 @@ $$0\leq s_i \leq 1$$
 #### 点集结果
 
 <div  align="center">    
-<img src="https://gitee.com//dominic_z/markdown_picbed/raw/master/img/asda;fnjalifjlao;fj.png" width = "50%"/>
+<img src="https://gitee.com//dominic_z/markdown_picbed/raw/master/img/asda;fnjalifjlao;fj.png" width = "40%"/>
 </div>
 
 ### 由所有交点构成凸包
@@ -142,4 +142,19 @@ Graham's Scan尝试先将所有点依照时针顺序排好，再来做绕行-圈
 </div>
 
 
-更改了CalcMeasure  idx ds
+---
+
+
+之前让我去用matlab算一下。我没有做，因为我觉得这个梯度已经很直观，很明了了，没有复杂的公式。相比倒腾matlab软件然后用不熟悉的语言重写好几个函数的代价要比找到bug的代价要高。所以还是想请你来检查一下，我的代码逻辑有没有错。如果代码没问题，我再去用matlab。
+
+为了计算，验证方便，只算测地距离的梯度。能量函数和梯度如下：
+$$
+E_{g}=\sum_{e \in \mathcal{P}}\left((\mathbf {p}_{k}-\mathbf {p}_{l})^{2}-\left(l_{t}(e)\right)^{2}\right)^{2}
+$$
+
+$$\nabla_{\mathrm{p_k}} E_{g}=\sum_{e \in P\left(p_{i}\right)} 4\left(\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)^{2}-\left(l_{t}(e)\right)^{2}\right)\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)$$
+
+$$\nabla_{\mathrm{p_l}} E_{g}=-\sum_{e \in P\left(p_{i}\right)} 4\left(\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)^{2}-\left(l_{t}(e)\right)^{2}\right)\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)$$
+
+$pId$是个二维数组，$i$遍历尺寸，$j$遍历每个尺寸对应的点
+![](https://gitee.com//dominic_z/markdown_picbed/raw/master/img/20200727183452.png)
