@@ -1,8 +1,8 @@
 import sys
 
-from ui import Ui_HumanEstimate
-from maya_widget import MayaviQWidget
-from PyQt5 import QtCore, QtGui, QtWidgets
+from src.ui import Ui_HumanEstimate
+from src.maya_widget import MayaviQWidget
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication,QMainWindow
 
 class Demo(QMainWindow,Ui_HumanEstimate):
