@@ -36,7 +36,7 @@ $$
 
 其中$\vec p$是顶点坐标向量，$\vec q$是切平面与网格上三角面片的边的交点坐标向量。$l_t(d)$是实际测量线段的长度，$l_t(e)$是实际测量的围长，欧式距离就是两点坐标的直线距离直接计算就可以，而测地距离和围长是多个顶点距离之和，每一段的逼近长度需要单独计算出来。假定变形前后长度比例不变，可以通过下式算出逼近的长度：
 
-$$l_t(d) = \frac{l_t(P)}{l_g(P)}l_g(e)$$
+$$l_t(e) = \frac{l_t(P)}{l_g(P)}l_g(e)$$
 
 $$l_t(e) = \frac{l_t(C)}{l_g(C)}l_g(e)$$
 
@@ -131,7 +131,7 @@ Graham's Scan尝试先将所有点依照时针顺序排好，再来做绕行-圈
 
 每次加入新点，都要与已在凸包的两个点进行Toleft检测，如果在外侧，就加入凸包，并且弹出最上面的点，凹陷的点必定不是凸包上的顶点。如果在内测，就将其加入凸包。
 
-<div  align="center">    
+div  align="center">    
 <img src="https://gitee.com//dominic_z/markdown_picbed/raw/master/img/GrahamsScan5.png" width = "40%"/>
 </div>
 
@@ -142,7 +142,7 @@ Graham's Scan尝试先将所有点依照时针顺序排好，再来做绕行-圈
 </div>
 
 
----
+--- 
 
 
 之前让我去用matlab算一下。我没有做，因为我觉得这个梯度已经很直观，很明了了，没有复杂的公式。相比倒腾matlab软件然后用不熟悉的语言重写好几个函数的代价要比找到bug的代价要高。所以还是想请你来检查一下，我的代码逻辑有没有错。如果代码没问题，我再去用matlab。
@@ -152,7 +152,9 @@ $$
 E_{g}=\sum_{e \in \mathcal{P}}\left((\mathbf {p}_{k}-\mathbf {p}_{l})^{2}-\left(l_{t}(e)\right)^{2}\right)^{2}
 $$
 
-$$\nabla_{\mathrm{p_k}} E_{g}=\sum_{e \in P\left(p_{i}\right)} 4\left(\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)^{2}-\left(l_{t}(e)\right)^{2}\right)\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)$$
+$$
+\nabla_{\mathrm{p_k}} E_{g}=\sum_{e \in P\left(p_{i}\right)} 4\left(\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)^{2}-\left(l_{t}(e)\right)^{2}\right)\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)
+$$
 
 $$\nabla_{\mathrm{p_l}} E_{g}=-\sum_{e \in P\left(p_{i}\right)} 4\left(\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)^{2}-\left(l_{t}(e)\right)^{2}\right)\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)$$
 
