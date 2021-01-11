@@ -48,6 +48,7 @@ public:
 	float Measure::CalcConvexCircumference(SurfaceMesh& mesh, const int index);
 	std::vector<float> Measure::CalcConvexCircumferences(SurfaceMesh& mesh);
 	void Measure::CalcCircumferencesAndSave();
+	void Measure::SaveConvecHullForTest();
 public:
 	const pmp::vec3 normal = vec3(0, 0, 1);
 	

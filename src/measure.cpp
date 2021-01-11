@@ -172,7 +172,7 @@ Eigen::MatrixXd Measure::CalcMeasure(const std::vector<std::vector<std::vector<d
 	int len = x.cols();
 	for (int i = 0; i < len; ++i)
 	{
-		sum += pow(x(0, i) - average, 2);
+		sum += pow(x(0, i) - average, 2); 
 	}
 	return sum / len;
 }
@@ -444,7 +444,6 @@ void Measure::CalcIntersectionPoints(std::vector<pmp::vec3>& intersect_points, s
 
 			cout << "inter point size: " << intersect_points_t.size() << endl;
 
-
 			//留下周长最长的那个点集
 			chain_len_t = CalcChainLength(intersect_points_t);
 			cout << "chain_len: " << chain_len_t << endl;
@@ -544,4 +543,19 @@ void Measure::CalcCircumferencesAndSave()
 	}
 
 	binaryio::WriteMatrixBinaryToFile((BIN_DATA_PATH + "circumferences").c_str(), circum);
+}
+
+void Measure::SaveConvecHullForTest()
+{
+	SurfaceMesh mesh;
+	mesh.read((DATASET_PATH + "1_.obj").c_str());
+	std::vector<float> scale_set;
+	std::vector<pmp::Edge> edgs_intersect;
+	std::vector<pmp::vec3> intersect_points;
+	pmp::vec3 ori_point = mesh.position(Vertex(4391));//4391表示乳点12229头围
+	SetBool(mesh);
+	CalcIntersectionPoints(intersect_points, edgs_intersect, scale_set, mesh, normal, ori_point);
+	SavePointToFile(points_path, intersect_points);
+	vector<pmp::vec3> output = GrahamScan(intersect_points);
+	SavePointToFile(convex_hull_path, output);
 }

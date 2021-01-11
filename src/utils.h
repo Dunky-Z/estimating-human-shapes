@@ -30,7 +30,7 @@ const string points_path = "./data/points.txt";
 const string points_idx_path = "./data/points_id.txt";
 const string convex_hull_path = "./data/convexhull.txt";
 
-const std::string DATASET_PATH = "D:/ITabc/ITabc/objDataSet/dataset/male_tmp/";
+const std::string DATASET_PATH = "D:/ITabc/ITabc/objDataSet/dataset/female_tmp/";
 //const std::string DATASET_PATH = "./model/";
 const std::string BIN_DATA_PATH = "./data/";
 //const std::string BIN_DATA_PATH = "./model/";

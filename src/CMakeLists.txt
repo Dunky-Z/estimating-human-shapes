@@ -10,21 +10,22 @@ project ("estimating-human-shapes")
 find_package(Eigen3 REQUIRED)
 
 include_directories("D:/ITabc/ITabc/BodyReconstruction/BodyReconstruction/include")
-include_directories("D:/ITabc/ITabc/estimating-human-shapes/alglib/cpp/src")
 LINK_DIRECTORIES("D:/ITabc/ITabc/BodyReconstruction/BodyReconstruction/Lib")
 
 #SURFACE MESH
 include_directories("$ENV{Surface_Mesh_DIR}/include")
 include_directories("D:/Lib/pmp-library-debug/include")
 
-
-#SET(ALGLIB_FILES "../alglib/cpp/src/alglibinternal.cpp")
+#alglib
 FILE(GLOB ALGLIB_FILES "../alglib/cpp/src/*.cpp" "../alglib/cpp/src/*.h")
+FILE(GLOB GEODESIC_FILES "../geodesic/*.cpp" "../geodesic/*.h")
+
 FILE(GLOB SC_FILES "*.cpp" "*.h")
 
 source_group(alglib FILES ${ALGLIB_FILES})
+source_group(geodesic FILES ${GEODESIC_FILES})
 
-add_executable(${PROJECT_NAME} ${SC_FILES} ${ALGLIB_FILES})
+add_executable(${PROJECT_NAME} ${SC_FILES} ${ALGLIB_FILES}  ${GEODESIC_FILES})
 
 #target_link_libraries(estimating-human-shapes pmp)
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)

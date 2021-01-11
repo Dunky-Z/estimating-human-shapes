@@ -21,68 +21,65 @@ std::vector<std::vector<std::vector<double>>> control_points;
 
 int main()
 {
-	Reshaper reshaper;
+	//Reshaper reshaper;
 	Measure measure;
-	meshio::ReadObj(ori_mesh_path, verts, faces);
-	verts = verts * 100;
-	std::cout << verts.middleCols<30>(280) << std::endl;
-	std::cout << "----------------------------" << std::endl;
-	reshaper.SaveBinControlPoint(control_points);
-	reshaper.SaveBinEdge(control_points, point_idx);
-	input_m << 1795.61, 460.47, 890.41, 823.41, 419.05, 824.58, 1126.35, 1199.55, 1336.46, 649.92, 623.889, 204.25, 1313.27, 442.89, 726.47;
-	input_m = input_m * 100;
-	measurements = measure.CalcMeasure(control_points, verts, faces);
 
-	//alglib::real_1d_array xx;
-	//xx.attach_to_ptr(verts.cols() * 3, verts.data());
-	//double f(0.0);
-	//alglib::real_1d_array g;
-	//grad_function(xx, f, g, nullptr);
+	/////////////////////
+	measure.SaveConvecHullForTest();
+	/////////////////////
+	//meshio::ReadObj(ori_mesh_path, verts, faces);
+	//verts = verts * 100;
 
-	alglib::real_1d_array x;
-	x.attach_to_ptr(verts.cols() * 3, verts.data());
-	double epsg = 0.0;
-	double epsf = 0.0;
-	double epsx = 0.0;
-	double stpmax = 0.0;
-	alglib::ae_int_t maxits = 0;
-	alglib::minlbfgsstate state;
-	alglib::minlbfgsreport rep;
+	//reshaper.SaveBinControlPoint(control_points);
+	//reshaper.SaveBinEdge(control_points, point_idx);
+	//input_m << 1795.61, 460.47, 890.41, 823.41, 419.05, 824.58, 1126.35, 1199.55, 1336.46, 649.92, 623.889, 204.25, 1313.27, 442.89, 726.47;
+	//input_m = input_m * 100;
+	//measurements = measure.CalcMeasure(control_points, verts, faces);
 
-	alglib::minlbfgscreate(5.0, x, state);
-	alglib::minlbfgssetcond(state, epsg, epsf, epsx, maxits);
-	alglib::minlbfgssetstpmax(state, stpmax);
-	Eigen::VectorXd vs;
-	vs.resize(verts.cols() * 3);
-	memset(vs.data(), 100, sizeof(double) * vs.size());
-	alglib::real_1d_array scalar;
-	scalar.setcontent(vs.size(), vs.data());
-	alglib::minlbfgssetscale(state, scalar);
+	//alglib::real_1d_array x;
+	//x.attach_to_ptr(verts.cols() * 3, verts.data());
+	//double epsg = 0.0;
+	//double epsf = 0.0;
+	//double epsx = 0.0;
+	//double stpmax = 0.0;
+	//alglib::ae_int_t maxits = 0;
+	//alglib::minlbfgsstate state;
+	//alglib::minlbfgsreport rep;
 
-	////OptGuard is essential at the early prototyping stages.
-	// first run
-	alglib::minlbfgsoptimize(state, grad_function);
-	alglib::real_1d_array rex;
-	alglib::minlbfgsresults(state, rex, rep);
+	//alglib::minlbfgscreate(5.0, x, state);
+	//alglib::minlbfgssetcond(state, epsg, epsf, epsx, maxits);
+	//alglib::minlbfgssetstpmax(state, stpmax);
+	//Eigen::VectorXd vs;
+	//vs.resize(verts.cols() * 3);
+	//memset(vs.data(), 100, sizeof(double) * vs.size());
+	//alglib::real_1d_array scalar;
+	//scalar.setcontent(vs.size(), vs.data());
+	//alglib::minlbfgssetscale(state, scalar);
+
+	//////OptGuard is essential at the early prototyping stages.
+	//// first run
+	//alglib::minlbfgsoptimize(state, grad_function);
+	//alglib::real_1d_array rex;
+	//alglib::minlbfgsresults(state, rex, rep);
 
 
-	std::cout << "迭代次数 : " << rep.iterationscount << std::endl;
-	std::cout << "梯度计算次数 : " << rep.nfev << std::endl;
-	std::cout << "终止情况 : " << rep.terminationtype << std::endl;
+	//std::cout << "迭代次数 : " << rep.iterationscount << std::endl;
+	//std::cout << "梯度计算次数 : " << rep.nfev << std::endl;
+	//std::cout << "终止情况 : " << rep.terminationtype << std::endl;
 
-	Eigen::Matrix3Xd curV = Eigen::Map<Eigen::Matrix3Xd>(rex.getcontent(), 3, verts.cols());
-	cout << curV.middleCols<30>(280) << endl;
+	//Eigen::Matrix3Xd curV = Eigen::Map<Eigen::Matrix3Xd>(rex.getcontent(), 3, verts.cols());
+	//cout << curV.middleCols<30>(280) << endl;
 
-	//将梯度转成矩阵形式
-	Eigen::Matrix3Xd gradient_t;
-	gradient_t.resize(3, verts.cols());
-	for (size_t i = 0; i < verts.cols(); ++i)
-	{
-		for (size_t j = 0; j < 3; ++j)
-		{
-			gradient_t(j, i) = gradient(3 * i + j);
-		}
-	}
+	////将梯度转成矩阵形式
+	//Eigen::Matrix3Xd gradient_t;
+	//gradient_t.resize(3, verts.cols());
+	//for (size_t i = 0; i < verts.cols(); ++i)
+	//{
+	//	for (size_t j = 0; j < 3; ++j)
+	//	{
+	//		gradient_t(j, i) = gradient(3 * i + j);
+	//	}
+	//}
 
 	//std::cout << gradient_t.middleCols<10>(280) << std::endl;
 	//计算能量
@@ -183,6 +180,7 @@ void grad_function(const alglib::real_1d_array& x, double& func, alglib::real_1d
 //	}
 //}
 
+
 /*!
 *@brief  计算测地距离的梯度
 *@param[out]
@@ -232,4 +230,49 @@ float CalcTargetLen(Eigen::MatrixXd& measurements, const float& cur_len, const i
 {
 	float target_len = (cur_len / measurements.coeff(index, 0))*(input_m.coeff(index, 0));
 	return target_len;
+}
+
+/*!
+*@brief  计算拉普拉斯权值矩阵
+*@param[out] 拉普拉斯稀疏矩阵
+*@param[in]  const SurfaceMesh & mesh  待求拉普拉斯矩阵的原始网格
+*@param[in]  Eigen::SparseMatrix<float> & L  拉普拉斯矩阵，是个大型稀疏矩阵
+*@return     void
+*/
+void CaculateLaplacianCotMatrix(const SurfaceMesh& mesh, Eigen::SparseMatrix<double> & L)
+{
+	std::vector<Tri> tripletlist;
+	tripletlist.reserve(20);
+	const int p_num = mesh.n_vertices();
+	L.resize(p_num, p_num);
+	for (auto fit : mesh.faces())
+	{
+		vec3 p[3];
+		float cot[3];
+		int id[3];
+		auto vf = mesh.vertices(fit);
+		for (int i = 0; i < 3; ++i, ++vf)
+		{
+			p[i] = mesh.position(*vf);
+			id[i] = (*vf).idx();
+		}
+		for (int i = 0; i < 3; ++i)
+		{
+			int j = (i + 1) % 3, k = (j + 1) % 3;
+			cot[i] = dot(p[j] - p[i], p[k] - p[i]) / norm(cross(p[j] - p[i], p[k] - p[i]));
+
+			tripletlist.push_back(Tri(id[j], id[k], -0.5 * cot[i]));
+			tripletlist.push_back(Tri(id[k], id[j], -0.5 * cot[i]));
+		}
+		for (int i = 0; i < 3; ++i)
+		{
+			tripletlist.push_back(Tri(id[i], id[i], 0.5*(cot[(i + 1) % 3] + cot[(i + 2) % 3])));
+		}
+	}
+	L.setFromTriplets(tripletlist.begin(), tripletlist.end());
+}
+
+void CaculateCoefficientCotMatrix(const SurfaceMesh& mesh, Eigen::SparseMatrix<double> & A)
+{
+
 }
