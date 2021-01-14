@@ -24,6 +24,10 @@ using namespace Eigen;
 #define BASIS_NUM 10
 #define EPSILON 1e-6
 
+struct node {
+	int x, y;
+	double t;
+};
 
 const string ori_mesh_path = "./data/male01.obj";
 const string points_path = "./data/points.txt";

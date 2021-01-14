@@ -9,11 +9,12 @@
 #include "../geodesic/geodesic_algorithm_subdivision.h"
 
 using namespace std;
-class measure
+class Measurement
 {
 private:
-	static const int N = 12;
 	static const int M = 5;
+	static const int N = 12;
+
 	int lengthKeyPoint[M][2] = {
 {12498, 138}/*croth_knee_floor¿ç¸ß*/,
 {10814, 10848}/*across_back_shoulder_neck¼ç¿í*/,
@@ -24,11 +25,11 @@ private:
 
 	int circleKeyPoint[N][4] = {
 {10963, 11179, 11140, 10943}/*neck¾±Î§*/,
-{9285, 9240, 9019, 8666}/*chestĞØÎ§---------*/,
-{6937, 7118, 7230, 7124}/*belly_button_waistÏÂÑüÎ§-------*/,
-{5735, 6275, 6329, 6182}/*gluteal_hipÉÏÍÎÎ§-----------*/,
-{7644, 7804, 7724, 7800}/*natural_waistÉÏÑüÎ§--------------*/,
-{4642, 5015, 4828, 4856}/*maximum_hipÏÂÍÎÎ§-------*/,
+{9141, 9285, 8488, 8364}/*chestĞØÎ§---------*/,
+{7043, 7021, 7253, 7158}/*belly_button_waistÏÂÑüÎ§-------*/,
+{6033, 5948, 6434, 6344}/*gluteal_hipÉÏÍÎÎ§-----------*/,
+{7716, 7656, 7724, 7695}/*natural_waistÉÏÑüÎ§--------------*/,
+{4787, 4791,4825,4761}/*maximum_hipÏÂÍÎÎ§-------*/,
 {9821, 10132, 9942, 9622}/*mid_upper_armÉÏ±ÛÎ§+-------*/,
 {6640, 6711, 6697, 6574}/*wristÍóÎ§----------*/,
 {2645, 2630, 2557, 2622}/*kneeÏ¥Î§---------*/,
@@ -41,16 +42,18 @@ private:
 	double circle[N];
 
 public:
-	string SemanticLable[N + M] =
+
+	string SemanticLable[M+N] =
 	{
+		"croth_knee_floor", "across_back_shoulder_neck", "neck_to_gluteal_hip",
+		"shoulder_to_midhand", "outer_natural_waist_to_floor"
+
 		"neck", "chest", "belly_button_waist", "gluteal_hip", "natural_waist",
 		"maximum_hip", "mid_upper_arm", "wrist", "knee", "maximum_thigh", "neck_shoulder_elbow_wirst","natural_waist_rise",
 
-		"croth_knee_floor", "across_back_shoulder_neck", "neck_to_gluteal_hip", 
-		"shoulder_to_midhand", "outer_natural_waist_to_floor"
 	};
-	measure();
-	~measure();
+	Measurement();
+	~Measurement();
 
 	void initMesh(geodesic::Mesh &mesh, const Eigen::Matrix3Xd & V, Eigen::Matrix3Xi &F);
 
@@ -60,19 +63,37 @@ public:
 
 	void calcSubdivide(const Eigen::Matrix3Xd &V, Eigen::Matrix3Xi &F);
 	void calcDijkstra(const Eigen::Matrix3Xd &V, Eigen::Matrix3Xi &F);
+	void Measurement::CalcGeodesicAndCircum(
+		const Eigen::Matrix3Xd & V,
+		Eigen::Matrix3Xi & F,
+		bool save);
 	void calcLength(geodesic::GeodesicAlgorithmBase *algo, geodesic::Mesh &mesh, bool save = false);
 	void calcCircle(geodesic::GeodesicAlgorithmBase *algo, geodesic::Mesh &mesh, bool save = false);
 
 	void writeVTK(const std::string &filename, std::vector<geodesic::SurfacePoint> &path);
 
-	void saveParam(Eigen::MatrixXd &Param, int col) {
+	void saveParam(
+		Eigen::MatrixXd &Param, 
+		int col) 
+	{
 		for (int i = 0; i < N; ++i)
 			Param(i, col) = circle[i];
 		for (int i = 0; i < M; ++i)
 			Param(i + N, col) = length[i];
 	}
 
-	void init() {
+	int GetNumOfGeodetic()
+	{
+		return M;
+	}
+
+	int GetNumOfCircumference()
+	{
+		return N;
+	}
+
+	void init() 
+	{
 		for (int i = 0; i < N; ++i) circle[i] = 0;
 		for (int j = 0; j < M; ++j) length[j] = 0;
 	}
@@ -85,11 +106,11 @@ public:
 	}
 	void printAll() {
 		cout << "Print all of the semantic lables.." << endl;
-		for (int i = 0; i < N; ++i) {
-			cout << SemanticLable[i] << " = " << circle[i] << endl;
-		}
 		for (int i = 0; i < M; ++i) {
-			cout << SemanticLable[i + N] << " = " << length[i] << endl;
+			cout << SemanticLable[i] << " = " << length[i] << endl;
+		}
+		for (int i = 0; i < N; ++i) {
+			cout << SemanticLable[i + M] << " = " << circle[i] << endl;
 		}
 	}
 	int len() {

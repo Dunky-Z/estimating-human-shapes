@@ -5,12 +5,12 @@
 using namespace std;
 
 
-measure::measure() { }
+Measurement::Measurement() { }
 
-measure::~measure() { }
+Measurement::~Measurement() { }
 
 // line to *.vtk, visualize the geodesics and check.
-void measure::writeVTK(const std::string &filename,
+void Measurement::writeVTK(const std::string &filename,
 	std::vector<geodesic::SurfacePoint> &path)
 {
 	std::vector<double> nodes;
@@ -35,7 +35,7 @@ void measure::writeVTK(const std::string &filename,
 }
 
 
-void measure::initMesh(geodesic::Mesh &mesh,
+void Measurement::initMesh(geodesic::Mesh &mesh,
 	const Eigen::Matrix3Xd & V, Eigen::Matrix3Xi & F)
 {
 	init();
@@ -57,7 +57,7 @@ void measure::initMesh(geodesic::Mesh &mesh,
 
 
 
-void measure::calcExact(const Eigen::Matrix3Xd & V,
+void Measurement::calcExact(const Eigen::Matrix3Xd & V,
 	Eigen::Matrix3Xi & F, bool save)
 {
 	geodesic::Mesh mesh;
@@ -69,7 +69,7 @@ void measure::calcExact(const Eigen::Matrix3Xd & V,
 	printAll();
 }
 
-void measure::calcSubdivide(const Eigen::Matrix3Xd & V,
+void Measurement::calcSubdivide(const Eigen::Matrix3Xd & V,
 	Eigen::Matrix3Xi & F)
 {
 	geodesic::Mesh mesh;
@@ -84,8 +84,24 @@ void measure::calcSubdivide(const Eigen::Matrix3Xd & V,
 	printAll();
 }
 
+void Measurement::CalcGeodesicAndCircum(
+	const Eigen::Matrix3Xd & V,
+	Eigen::Matrix3Xi & F,
+	bool save)
+{
+	geodesic::Mesh mesh;
+	initMesh(mesh, V, F);
+	geodesic::GeodesicAlgorithmDijkstra algo_1(&mesh);
+	calcLength(&algo_1, mesh, save);
 
-void measure::calcDijkstra(const Eigen::Matrix3Xd & V,
+	initMesh(mesh, V, F);
+	geodesic::GeodesicAlgorithmExact algo_2(&mesh);
+	calcCircle(&algo_2, mesh, save);
+
+	printAll();
+}
+
+void Measurement::calcDijkstra(const Eigen::Matrix3Xd & V,
 	Eigen::Matrix3Xi &F)
 {
 	geodesic::Mesh mesh;
@@ -100,13 +116,14 @@ void measure::calcDijkstra(const Eigen::Matrix3Xd & V,
 	printAll();
 }
 
-void measure::savePath(std::ofstream &out, const std::vector<geodesic::SurfacePoint> &path)
+void Measurement::savePath(std::ofstream &out, const std::vector<geodesic::SurfacePoint> &path)
 {
 	for (auto p : path) {
 		cout << p.type() << " - ";
 		int x, y;
 		double t;
-		if (p.type() == geodesic::VERTEX) {
+		if (p.type() == geodesic::VERTEX)
+		{
 			geodesic::vertex_pointer v = static_cast<geodesic::vertex_pointer>(p.base_element());
 			x = v->id(), y = 0;
 			t = 0;
@@ -116,7 +133,6 @@ void measure::savePath(std::ofstream &out, const std::vector<geodesic::SurfacePo
 			geodesic::edge_pointer e = static_cast<geodesic::edge_pointer>(p.base_element());
 			x = e->v0()->id(), y = e->v1()->id();
 			t = p.distance(e->v0()) / e->length();
-
 			cout << e->v0()->id() << " ";
 			cout << e->v1()->id() << " ";
 			cout << p.distance(e->v0()) / e->length();
@@ -131,12 +147,14 @@ void measure::savePath(std::ofstream &out, const std::vector<geodesic::SurfacePo
 	}
 }
 
-void measure::calcLength(geodesic::GeodesicAlgorithmBase *algo,
+void Measurement::calcLength(geodesic::GeodesicAlgorithmBase *algo,
 	geodesic::Mesh &mesh, bool save)
 {
 	/*******************Calculate Geodesic Length*******************/
+	ofstream length_out("../data/path/length.txt");
 	for (int i = 0; i < M; ++i) {
-		cout << "now " << SemanticLable[N + i] << endl;
+		//length_out.write((const char*)(&M), sizeof(double));
+		cout << "now " << SemanticLable[i] << endl;
 		int s = lengthKeyPoint[i][0];
 		int t = lengthKeyPoint[i][1];
 		std::vector<geodesic::SurfacePoint> source;
@@ -151,32 +169,37 @@ void measure::calcLength(geodesic::GeodesicAlgorithmBase *algo,
 		algo->trace_back(target, path);
 		geodesic::print_info_about_path(path);
 		length[i] = geodesic::length(path);
-
+		std::cout << length[i] << std::endl;
 		int len = path.size();
-		if (save) {
-			ofstream out("../data/path/" + SemanticLable[N + i] + "0", ios::binary);
+		if (save)
+		{
+			ofstream out("../data/path/" + SemanticLable[i] + "0", ios::binary);
 			out.write((const char*)(&len), sizeof(int));
 
 			savePath(out, path);
-			string name = "../data/measure_vtk/" +to_string(i) + "_" +SemanticLable[N+i] + ".vtk";
+			string name = "../data/measure_vtk/" + to_string(i) + "_" + SemanticLable[i] + ".vtk";
 			writeVTK(name, path);
 			//printInfo(N + i);
 			out.close();
 		}
+		length_out << length[i] << std::endl;
 	}
+	length_out.close();
 }
 
 
-void measure::calcCircle(geodesic::GeodesicAlgorithmBase *algo,
+void Measurement::calcCircle(geodesic::GeodesicAlgorithmBase *algo,
 	geodesic::Mesh &mesh, bool save)
 {
 	/*********************Calculate Circumstance********************/
-
+	ofstream circle_out("../data/path/circle.txt");
 	for (int i = 0; i < N; ++i) {
-		cout << "now " << SemanticLable[i] << endl;
+		//circle_out.write((const char*)(&N), sizeof(double));
+		cout << "now " << SemanticLable[M + i] << endl;
 		std::vector<geodesic::SurfacePoint> path[4];
 		int len = 0;
-		for (int j = 0; j < 4; ++j) {
+		for (int j = 0; j < 4; ++j)
+		{
 			int s = circleKeyPoint[i][j];
 			int t = circleKeyPoint[i][(j + 1) % 4];
 
@@ -193,16 +216,20 @@ void measure::calcCircle(geodesic::GeodesicAlgorithmBase *algo,
 			circle[i] += geodesic::length(path[j]);
 
 			len += path[j].size();
-			string name = "../data/measure_vtk/" + to_string(i) +"-" + to_string(j) + "-" + SemanticLable[i]+ ".vtk";
-			writeVTK(name, path[j]);
-			if (save) {
-				ofstream out("../data/path/" + SemanticLable[i]+to_string(j), ios::binary);
+			if (save)
+			{
+				ofstream out("../data/path/" + SemanticLable[M + i] + to_string(j), ios::binary);
 				out.write((const char*)(&len), sizeof(int));
 				savePath(out, path[j]);
+
+				string name = "../data/measure_vtk/" + to_string(i) + "-" + to_string(j) + "-" + SemanticLable[M + i] + ".vtk";
+				writeVTK(name, path[j]);
 				out.close();
 			}
 		}
+		circle_out << circle[i] << std::endl;
 		//printInfo(i);
 	}
+	circle_out.close();
 }
 

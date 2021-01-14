@@ -142,7 +142,7 @@ div  align="center">
 </div>
 
 
---- 
+---
 
 
 之前让我去用matlab算一下。我没有做，因为我觉得这个梯度已经很直观，很明了了，没有复杂的公式。相比倒腾matlab软件然后用不熟悉的语言重写好几个函数的代价要比找到bug的代价要高。所以还是想请你来检查一下，我的代码逻辑有没有错。如果代码没问题，我再去用matlab。
@@ -158,6 +158,9 @@ $$
 
 $$\nabla_{\mathrm{p_l}} E_{g}=-\sum_{e \in P\left(p_{i}\right)} 4\left(\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)^{2}-\left(l_{t}(e)\right)^{2}\right)\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)$$
 
+
+
+
 $pId$是个二维数组，$i$遍历尺寸，$j$遍历每个尺寸对应的点
 ![](https://gitee.com//dominic_z/markdown_picbed/raw/master/img/20200727183452.png)
 
@@ -166,5 +169,13 @@ $pId$是个二维数组，$i$遍历尺寸，$j$遍历每个尺寸对应的点
 上腰围   7716右  7656左  7724左背  7695右背
 下腰围 7043 7021 7253左背 7158右背
 上臀围 6033 5948 6434 6344
-下臀围 4761 4825 4787左臀  4791右臀
+下臀围 4761 4825 4787左臀  4791右臀   前后算直线距离
 
+$$
+E_{c}=\sum_{e \in \mathcal{C}}\left(\left(\mathrm{q}_{\mathrm{i}}-\mathrm{q}_{\mathrm{j}}\right)^{2}-\left(l_{t}(e)\right)^{2}\right)^{2}
+$$
+
+$$\nabla_{\mathrm{p_i}} E_{\mathcal{P}} = \sum_{e \in P\left(p_{i}\right)} 4\left(\left((t_1(v_j-v_i)+v_i)-(t(v_k-v_i)+v_i)\right)^{2}-\left(l_{t}(e)\right)^{2}\right)((t_1(v_j-v_i)+v_i)-(t_2(v_k-v_i)+v_i))(t_2-t_1)$$
+
+12480
+58
