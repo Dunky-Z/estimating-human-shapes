@@ -50,10 +50,10 @@ public:
 	string SemanticLable[M + N] =
 	{
 		"croth_knee_floor", "across_back_shoulder_neck", "neck_to_gluteal_hip",
-		"shoulder_to_midhand", "outer_natural_waist_to_floor"
+		"shoulder_to_midhand", "outer_natural_waist_to_floor","neck_shoulder_elbow_wirst","natural_waist_rise",
 
 		"neck", "chest", "belly_button_waist", "gluteal_hip", "natural_waist",
-		"maximum_hip", "mid_upper_arm", "wrist", "knee", "maximum_thigh", "neck_shoulder_elbow_wirst","natural_waist_rise",
+		"maximum_hip", "mid_upper_arm", "wrist", "knee", "maximum_thigh"
 
 	};
 	Measurement();

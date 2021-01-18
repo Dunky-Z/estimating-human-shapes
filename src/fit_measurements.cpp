@@ -15,7 +15,7 @@ const double step = 1;
 Eigen::Matrix3Xd verts;
 Eigen::Matrix3Xi faces;
 Eigen::MatrixXd input_m(M_NUM, 1);
-Eigen::VectorXd gradient;
+
 
 Eigen::MatrixXd measurements;
 std::vector<std::vector<int>> point_idx;
@@ -56,7 +56,7 @@ int main()
 	alglib::minlbfgsstate state;
 
 
-	alglib::minlbfgscreate(1, x, state);
+	alglib::minlbfgscreate(3, x, state);
 	alglib::minlbfgssetcond(state, epsg, epsf, epsx, maxits);
 	alglib::minlbfgssetscale(state, s);
 
@@ -117,25 +117,33 @@ void grad_function(const alglib::real_1d_array& x, double& func, alglib::real_1d
 	int num_verts = verts.cols();
 	alglib::real_1d_array temp(x);
 	Eigen::Matrix3Xd vertices = Eigen::Map<Eigen::Matrix3Xd>(temp.getcontent(), 3, num_verts);
-	double lamda = 0.1;
+	std::cout << ">> vertices <<" << std::endl << vertices.col(1) << std::endl;
+	double lamda = 0.0001;
 	double energy_m = 0, energy_s = 0;
-	gradient.setConstant(vertices.cols() * 3, 0);
+	Eigen::VectorXd gradient;
+	gradient.setConstant(num_verts * 3, 0.0);
 	CalcEuclideanGradient(energy_m, gradient, vertices);
 	CalcGeodesicGradient(energy_m, gradient, vertices);
 	CalcCircumferenceGradient(energy_m, gradient, vertices);
 	CalcSmoothnessEnergyAndGradient(energy_s, gradient, vertices);
-	func = (1 - lamda)*energy_m + lamda * energy_s;
+	func = (1 - lamda) * energy_m + lamda * energy_s;
 	std::cout << "Energy_m = " << energy_m << std::endl;
 	std::cout << "Energy_s = " << energy_s << std::endl;
 	std::cout << "EnergySum = " << func << std::endl;
-	for (int i = 0; i < grad.length(); ++i)
+	for (int i = 0; i < 3 * num_verts; ++i)
 	{
 		grad[i] = gradient(i);
 	}
+	std::cout << ">> grad <<" << std::endl;
+	for (int i = 0; i < 5; i++)
+	{
+		std::cout << grad[i] << std::endl;
+	}
+	meshio::SaveObj("../data/res" + to_string(count_iter) + ".obj", vertices, faces);
 }
 
 /*!
-*@brief  计算欧式距离的梯度
+*@brief  计算欧式距离的梯vvv度
 *@param[out]
 *@param[in]  Eigen::MatrixXd & gradient
 *@param[in]  SurfaceMesh & mesh
@@ -152,7 +160,7 @@ void CalcEuclideanGradient(
 	int id1 = 12480, id2 = 58;//12480头顶58脚底
 	pmp::vec3 p1 = vertices.col(id1);
 	pmp::vec3 p2 = vertices.col(id2);
-	double tar_len = std::pow(input_m.coeff(0, 0) / 1000, 2);
+	double tar_len = std::pow(input_m.coeff(0, 0) / 1000.0, 2);
 	double cur_len = std::pow(distance(p1, p2), 2);
 	grad = 4 * (cur_len - tar_len)*(p1 - p2);
 	energy = std::pow((cur_len - tar_len), 2);
@@ -160,6 +168,7 @@ void CalcEuclideanGradient(
 	{
 		gradient(id1 * 3 + i) += +grad[i];
 		gradient(id2 * 3 + i) += -grad[i];
+		std::cout << gradient(id2 * 3 + i) << std::endl;
 	}
 	std::cout << ">>>> CalcEuclideanGradient Done!" << std::endl;
 }
@@ -198,9 +207,9 @@ void CalcGeodesicGradient(
 			//cout << x << " " << y << " " << t << endl;
 		}
 		in.close();
-		for (int k = 0; k < path.size(); ++k)
+		for (int k = 0; k < path.size() - 1; ++k)
 		{
-			int id1 = path[k].x, id2 = path[(k + 1) % path.size()].x;
+			int id1 = path[k].x, id2 = path[k + 1].x;
 			//std::cout << id1 << "  " << id2 << std::endl;
 			pmp::vec3 p1 = vertices.col(id1);
 			pmp::vec3 p2 = vertices.col(id2);
@@ -253,11 +262,11 @@ void CalcCircumferenceGradient(
 				path.push_back({ x, y, t });
 			}
 			in.close();
-			for (int k = 0; k < path.size(); ++k)
+			for (int k = 0; k < path.size() - 1; ++k)
 			{
 				int id1 = path[k].x, id2 = path[k].y;
-				int id3 = path[(k + 1) % path.size()].x, id4 = path[(k + 1) % path.size()].y;
-				double t1 = path[k].t, t2 = path[(k + 1) % path.size()].t;
+				int id3 = path[k + 1].x, id4 = path[k + 1].y;
+				double t1 = path[k].t, t2 = path[k + 1].t;
 				//std::cout << id1 << "  " << id2 << std::endl;
 				pmp::vec3 p1 = vertices.col(id1);
 				pmp::vec3 p2 = vertices.col(id2);

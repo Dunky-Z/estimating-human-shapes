@@ -29,7 +29,7 @@ struct node {
 	double t;
 };
 
-const string ori_mesh_path = "./data/male01.obj";
+const string ori_mesh_path = "./data/AVE.obj";
 const string points_path = "./data/points.txt";
 const string points_idx_path = "./data/points_id.txt";
 const string convex_hull_path = "./data/convexhull.txt";
