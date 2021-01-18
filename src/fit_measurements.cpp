@@ -36,7 +36,7 @@ int main()
 	Measurement measure;
 	mesh.read(ori_mesh_path);
 	meshio::ReadObj(ori_mesh_path, verts, faces);
-	//measure.CalcGeodesicAndCircum(verts, faces, 1);
+	measure.CalcGeodesicAndCircum(verts, faces, 1);
 	ReadPathLength(length, circle);
 	input_m << 1701.61, 790.41, 301.05, 740.58, 541.92, 1260.27, 744.41, 592.73, 371.47, 845.81, 762.78, 784.35, 755.354, 955.55, 265.889, 166.25, 374.89, 518.47;
 	//input_m << 1701.61, 371.47, 845.81, 762.78, 784.35, 744.41, 790.41, 301.05, 740.58, 755.354, 955.55, 1185.46, 541.92, 265.889, 166.25, 1260.27, 374.89, 518.47;
