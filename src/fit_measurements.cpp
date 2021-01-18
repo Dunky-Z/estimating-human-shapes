@@ -24,6 +24,8 @@ std::vector<std::vector<std::vector<double>>> control_points;
 vector<double> length;
 vector<double> circle;
 
+SurfaceMesh mesh;
+
 int count_iter = 0;
 
 int main()
@@ -32,10 +34,12 @@ int main()
 	//reshaper.SaveBinControlPoint(control_points);
 	//reshaper.SaveBinEdge(control_points, point_idx);
 	Measurement measure;
+	mesh.read(ori_mesh_path);
 	meshio::ReadObj(ori_mesh_path, verts, faces);
-	//measure.CalcGeodesicAndCircum(verts, faces, 0);
+	//measure.CalcGeodesicAndCircum(verts, faces, 1);
 	ReadPathLength(length, circle);
-	input_m << 1701.61, 371.47, 845.81, 762.78, 784.35, 744.41, 790.41, 301.05, 740.58, 755.354, 955.55, 1185.46, 541.92, 265.889, 166.25, 1260.27, 374.89, 518.47;
+	input_m << 1701.61, 790.41, 301.05, 740.58, 541.92, 1260.27, 744.41, 592.73, 371.47, 845.81, 762.78, 784.35, 755.354, 955.55, 265.889, 166.25, 374.89, 518.47;
+	//input_m << 1701.61, 371.47, 845.81, 762.78, 784.35, 744.41, 790.41, 301.05, 740.58, 755.354, 955.55, 1185.46, 541.92, 265.889, 166.25, 1260.27, 374.89, 518.47;
 	int num_verts = verts.cols();
 	alglib::real_1d_array x;
 	//std::cout << vertices.coeff(0, 0) << "  " << vertices.coeff(1, 0) << "  " << vertices.coeff(2, 0) << std::endl;
@@ -89,7 +93,7 @@ void ReadPathLength(
 	std::vector<double>& circle)
 {
 	ifstream in_1("../data/path/length.txt");
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < 7; ++i)
 	{
 		double dist;
 		in_1 >> dist;
@@ -97,7 +101,7 @@ void ReadPathLength(
 	}
 	in_1.close();
 	ifstream in_2("../data/path/circle.txt");
-	for (int i = 0; i < 12; ++i)
+	for (int i = 0; i < 10; ++i)
 	{
 		double dist;
 		in_2 >> dist;
@@ -113,11 +117,17 @@ void grad_function(const alglib::real_1d_array& x, double& func, alglib::real_1d
 	int num_verts = verts.cols();
 	alglib::real_1d_array temp(x);
 	Eigen::Matrix3Xd vertices = Eigen::Map<Eigen::Matrix3Xd>(temp.getcontent(), 3, num_verts);
-	func = 0.0;
+	double lamda = 0.1;
+	double energy_m = 0, energy_s = 0;
 	gradient.setConstant(vertices.cols() * 3, 0);
-	CalcEuclideanGradient(func, gradient, vertices);
-	CalcGeodesicGradient(func, gradient, vertices);
-	CalcCircumferenceGradient(func, gradient, vertices);
+	CalcEuclideanGradient(energy_m, gradient, vertices);
+	CalcGeodesicGradient(energy_m, gradient, vertices);
+	CalcCircumferenceGradient(energy_m, gradient, vertices);
+	CalcSmoothnessEnergyAndGradient(energy_s, gradient, vertices);
+	func = (1 - lamda)*energy_m + lamda * energy_s;
+	std::cout << "Energy_m = " << energy_m << std::endl;
+	std::cout << "Energy_s = " << energy_s << std::endl;
+	std::cout << "EnergySum = " << func << std::endl;
 	for (int i = 0; i < grad.length(); ++i)
 	{
 		grad[i] = gradient(i);
@@ -142,12 +152,13 @@ void CalcEuclideanGradient(
 	int id1 = 12480, id2 = 58;//12480Í·¶¥58½Åµ×
 	pmp::vec3 p1 = vertices.col(id1);
 	pmp::vec3 p2 = vertices.col(id2);
-	auto input = std::pow(input_m.coeff(0, 0) / 1000, 2);
-	grad = 4 * (std::pow(distance(p1, p2), 2) - input)*(p1 - p2);
-	energy = std::pow((std::pow(distance(p1, p2), 2) - input), 2);
+	double tar_len = std::pow(input_m.coeff(0, 0) / 1000, 2);
+	double cur_len = std::pow(distance(p1, p2), 2);
+	grad = 4 * (cur_len - tar_len)*(p1 - p2);
+	energy = std::pow((cur_len - tar_len), 2);
 	for (int i = 0; i < 3; ++i)
 	{
-		gradient(id1 * 3 + i) += grad[i];
+		gradient(id1 * 3 + i) += +grad[i];
 		gradient(id2 * 3 + i) += -grad[i];
 	}
 	std::cout << ">>>> CalcEuclideanGradient Done!" << std::endl;
@@ -176,7 +187,7 @@ void CalcGeodesicGradient(
 		ifstream in("../data/path/" + measure.SemanticLable[i] + to_string(0), ios::binary);
 		int len;
 		in.read((char*)(&len), sizeof(int));
-		for (int i = 0; i < len; ++i)
+		for (int j = 0; j < len; ++j)
 		{
 			int x, y;
 			double t;
@@ -195,12 +206,12 @@ void CalcGeodesicGradient(
 			pmp::vec3 p2 = vertices.col(id2);
 			double dist = distance(p1, p2);
 			double cur_len = std::pow(dist, 2);
-			double tar_len = std::pow(CalcTargetLen(length, dist, i), 2);
+			double tar_len = std::pow(CalcTargetLen(length, dist, i + 1, i), 2);
 			energy += std::pow(cur_len - tar_len, 2);
-			grad = 4 * (cur_len - tar_len)*(p2 - p1);
+			grad = 4 * (cur_len - tar_len)*(p1 - p2);
 			for (size_t l = 0; l < 3; ++l)
 			{
-				gradient(id1 * 3 + l) += grad[l];
+				gradient(id1 * 3 + l) += +grad[l];
 				gradient(id2 * 3 + l) += -grad[l];
 			}
 		}
@@ -229,7 +240,7 @@ void CalcCircumferenceGradient(
 	{
 		for (size_t j = 0; j < 4; ++j)
 		{
-			ifstream in("../data/path/" + measure.SemanticLable[M+i] + to_string(j), ios::binary);
+			ifstream in("../data/path/" + measure.SemanticLable[M + i] + to_string(j), ios::binary);
 			int len;
 			in.read((char*)(&len), sizeof(int));
 			for (int i = 0; i < len; ++i)
@@ -246,7 +257,7 @@ void CalcCircumferenceGradient(
 			{
 				int id1 = path[k].x, id2 = path[k].y;
 				int id3 = path[(k + 1) % path.size()].x, id4 = path[(k + 1) % path.size()].y;
-				double t1 = path[k].t, t2 = path[(k + 1)%path.size()].t;
+				double t1 = path[k].t, t2 = path[(k + 1) % path.size()].t;
 				//std::cout << id1 << "  " << id2 << std::endl;
 				pmp::vec3 p1 = vertices.col(id1);
 				pmp::vec3 p2 = vertices.col(id2);
@@ -256,20 +267,49 @@ void CalcCircumferenceGradient(
 				pmp::vec3 p_mid_1 = t2 * (p4 - p3) + p3;
 				double dist = distance(p_mid_0, p_mid_1);
 				double cur_len = std::pow(dist, 2);
-				double tar_len = std::pow(CalcTargetLen(circle, dist, i), 2);
+				double tar_len = std::pow(CalcTargetLen(circle, dist, i + 1 + M, i), 2);
 				energy += std::pow(cur_len - tar_len, 2);
 				grad = 4 * (cur_len - tar_len)*(p_mid_0 - p_mid_1);
 				for (size_t l = 0; l < 3; ++l)
 				{
-					gradient(id1 * 3 + l) += t1 * grad[l];
+					gradient(id1 * 3 + l) += +t1 * grad[l];
 					gradient(id2 * 3 + l) += -t2 * grad[l];
 					gradient(id3 * 3 + l) += -t2 * grad[l];
-					gradient(id4 * 3 + l) += t1 * grad[l];
+					gradient(id4 * 3 + l) += +t1 * grad[l];
 				}
 			}
 		}
 	}
 	std::cout << ">>>> CalcCircumferenceGradient Done!" << std::endl;
+}
+
+void CalcSmoothnessEnergyAndGradient(
+	double& energy_s,
+	Eigen::VectorXd& gradient,
+	Matrix3Xd& new_vertices)
+{
+	pmp::vec3 grad{ 0,0,0 };
+	for (auto& vit : mesh.vertices())
+	{
+		int v_id = vit.idx();
+		pmp::vec3 pi = new_vertices.col(vit.idx());
+		pmp::vec3 pi_ori = mesh.position(vit);
+		pmp::vec3 delta_pi = pi - pi_ori;
+		for (auto& vit_nei : mesh.vertices(vit))
+		{
+			pmp::vec3 pj = new_vertices.col(vit_nei.idx());
+			pmp::vec3 pj_ori = mesh.position(vit_nei);
+			pmp::vec3 delta_pj = pj - pj_ori;
+			double v_norm = norm(pj_ori - delta_pj);
+			energy_s += std::pow(v_norm, 2);
+			grad = 2 * (delta_pi - delta_pj);
+			for (size_t l = 0; l < 3; ++l)
+			{
+				gradient(v_id * 3 + l) += grad[l];
+				gradient(vit_nei.idx() * 3 + l) += -grad[l];
+			}
+		}
+	}
 }
 
 /*!
@@ -298,11 +338,12 @@ float CalcTargetLen(Eigen::MatrixXd& measurements, const float& cur_len, const i
 double CalcTargetLen(
 	const std::vector<double>& measurments,
 	const double& cur_len,
-	const int& index)
+	const int& index1,
+	const int& index2)
 {
-	double m = measurments[index];
+	double m = measurments[index2];
 	double cur_len_p = cur_len / m;
-	double target_len_p = input_m.coeff(index, 0) / 1000.0;
+	double target_len_p = input_m.coeff(index1, 0) / 1000.0;
 	double target_len = cur_len_p * target_len_p;
 	return target_len;
 }

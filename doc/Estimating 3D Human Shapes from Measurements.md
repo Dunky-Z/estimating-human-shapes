@@ -67,10 +67,7 @@ $$
 $$\nabla_{\mathbf{p}_{\mathbf{i}}} E_{s}=\sum_{p_{j} \in N\left(p_{i}\right)} 2\left(\Delta \mathbf{p}_{\mathbf{i}}-\Delta \mathbf{p}_{\mathbf{j}}\right)
 $$
 
-将顶点初始化为上一步中求得的$X_{new}^{pca}$，这一步的整体能量函数可以表示为$E=(1-\lambda)E_m+\lambda E_s$。
 
-前向差分验证求梯度是否正确：  
-$$f'(x) = \frac{f(x+h)-f(x)}{h} - \frac{h}{2}f^{}$$
 
 
 ## 实现细节
@@ -164,18 +161,3 @@ $$\nabla_{\mathrm{p_l}} E_{g}=-\sum_{e \in P\left(p_{i}\right)} 4\left(\left(\ma
 $pId$是个二维数组，$i$遍历尺寸，$j$遍历每个尺寸对应的点
 ![](https://gitee.com//dominic_z/markdown_picbed/raw/master/img/20200727183452.png)
 
-
-03 胸围：9141右胸 9285左胸 8488左背 8364右背
-上腰围   7716右  7656左  7724左背  7695右背
-下腰围 7043 7021 7253左背 7158右背
-上臀围 6033 5948 6434 6344
-下臀围 4761 4825 4787左臀  4791右臀   前后算直线距离
-
-$$
-E_{c}=\sum_{e \in \mathcal{C}}\left(\left(\mathrm{q}_{\mathrm{i}}-\mathrm{q}_{\mathrm{j}}\right)^{2}-\left(l_{t}(e)\right)^{2}\right)^{2}
-$$
-
-$$\nabla_{\mathrm{p_i}} E_{\mathcal{P}} = \sum_{e \in P\left(p_{i}\right)} 4\left(\left((t_1(v_j-v_i)+v_i)-(t(v_k-v_i)+v_i)\right)^{2}-\left(l_{t}(e)\right)^{2}\right)((t_1(v_j-v_i)+v_i)-(t_2(v_k-v_i)+v_i))(t_2-t_1)$$
-
-12480
-58

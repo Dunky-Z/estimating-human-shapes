@@ -12,30 +12,34 @@ using namespace std;
 class Measurement
 {
 private:
-	static const int M = 5;
-	static const int N = 12;
+	static const int M = 7;
+	static const int N = 10;
 
-	int lengthKeyPoint[M][2] = {
-{12498, 138}/*croth_knee_floor¿ç¸ß*/,
-{10814, 10848}/*across_back_shoulder_neck¼ç¿í*/,
-{11122, 4486}/*neck_to_gluteal_hip±³³¤*/,
-{10886, 6621}/*shoulder_to_midhandĞä³¤*/,
-{8457, 285}/*outer_natural_waist_to_floorÑü¸ß*/
+	int lengthKeyPoint[M][2] =
+	{
+		{12498, 138}/*croth_knee_floor¿ç¸ß*/,
+		{10814, 10848}/*across_back_shoulder_neck¼ç¿í*/,
+		{11122, 4486}/*neck_to_gluteal_hip±³³¤*/,
+		{10886, 6621}/*shoulder_to_midhandĞä³¤*/,
+		{8457, 285}/*outer_natural_waist_to_floorÑü¸ß*/,
+		{11503,6034}/*neck_shoulder_elbow_wirst°ëÉí¿í-------------*/,
+		{8491,12486}/*natural_waist_riseĞØ¸ß*/
 	};
 
-	int circleKeyPoint[N][4] = {
-{10963, 11179, 11140, 10943}/*neck¾±Î§*/,
-{9141, 9285, 8488, 8364}/*chestĞØÎ§---------*/,
-{7043, 7021, 7253, 7158}/*belly_button_waistÏÂÑüÎ§-------*/,
-{6033, 5948, 6434, 6344}/*gluteal_hipÉÏÍÎÎ§-----------*/,
-{7716, 7656, 7724, 7695}/*natural_waistÉÏÑüÎ§--------------*/,
-{4787, 4791,4825,4761}/*maximum_hipÏÂÍÎÎ§-------*/,
-{9821, 10132, 9942, 9622}/*mid_upper_armÉÏ±ÛÎ§+-------*/,
-{6640, 6711, 6697, 6574}/*wristÍóÎ§----------*/,
-{2645, 2630, 2557, 2622}/*kneeÏ¥Î§---------*/,
-{3930, 3975, 4053, 4008}/*maximum_thigh´óÍÈÎ§---------*/,
-{11053, 10775, 8219,6034}/*neck_shoulder_elbow_wirst°ëÉí¿í-------------*/,
-{8491, 6441, 4122, 8587}/*natural_waist_riseĞØ¸ß*/,
+	int circleKeyPoint[N][4] =
+	{
+		{10963, 11179, 11140, 10943}/*neck¾±Î§*/,
+		{9141, 9285, 8488, 8364}/*chestĞØÎ§---------*/,
+		{7043, 7021, 7253, 7158}/*belly_button_waistÏÂÑüÎ§-------*/,
+		{6033, 5948, 6434, 6344}/*gluteal_hipÉÏÍÎÎ§-----------*/,
+		{7716, 7656, 7724, 7695}/*natural_waistÉÏÑüÎ§--------------*/,
+		{4787, 4791,4825,4761}/*maximum_hipÏÂÍÎÎ§-------*/,
+		{9821, 10132, 9942, 9622}/*mid_upper_armÉÏ±ÛÎ§+-------*/,
+		{6640, 6711, 6697, 6574}/*wristÍóÎ§----------*/,
+		{2645, 2630, 2557, 2622}/*kneeÏ¥Î§---------*/,
+		{3930, 3975, 4053, 4008}/*maximum_thigh´óÍÈÎ§---------*/
+		//{11053, 10775, 8219,6034}/*neck_shoulder_elbow_wirst°ëÉí¿í-------------*/,
+		//{8491, 6441, 4122, 8587}/*natural_waist_riseĞØ¸ß*/,
 	};
 
 	double length[M];
@@ -43,7 +47,7 @@ private:
 
 public:
 
-	string SemanticLable[M+N] =
+	string SemanticLable[M + N] =
 	{
 		"croth_knee_floor", "across_back_shoulder_neck", "neck_to_gluteal_hip",
 		"shoulder_to_midhand", "outer_natural_waist_to_floor"
@@ -73,8 +77,8 @@ public:
 	void writeVTK(const std::string &filename, std::vector<geodesic::SurfacePoint> &path);
 
 	void saveParam(
-		Eigen::MatrixXd &Param, 
-		int col) 
+		Eigen::MatrixXd &Param,
+		int col)
 	{
 		for (int i = 0; i < N; ++i)
 			Param(i, col) = circle[i];
@@ -92,7 +96,7 @@ public:
 		return N;
 	}
 
-	void init() 
+	void init()
 	{
 		for (int i = 0; i < N; ++i) circle[i] = 0;
 		for (int j = 0; j < M; ++j) length[j] = 0;
