@@ -45,12 +45,12 @@ $$l_t(e) = \frac{l_t(C)}{l_g(C)}l_g(e)$$
 - Minimization with respect to $W_{new}$  
 $X^{init}_{new}$可以通过学习的方法算出一个初始的模型，通过对三类尺寸的优化获得更精确的模型。优化方法采用拟牛顿法，需要对方程求导：$\nabla_{W_{new}}E = A^+\nabla_{p_i}E$
 
-$$\nabla_{\mathrm{pi}} E_{e}=\sum_{d \in D\left(p_{i}\right)} 4\left(\left(\mathbf{p}_{\mathbf{i}}-\mathbf{p}_{\mathbf{j}}\right)^{2}-\left(l_{t}(d)\right)^{2}\right)\left(\mathbf{p}_{\mathbf{i}}-\mathbf{p}_{\mathbf{j}}\right)$$
+$$\nabla_{\mathrm{pi}} E_{e}=\sum_{d \in \mathcal{D}} 4\left(\left(\mathbf{p}_{\mathbf{i}}-\mathbf{p}_{\mathbf{j}}\right)^{2}-\left(l_{t}(d)\right)^{2}\right)\left(\mathbf{p}_{\mathbf{i}}-\mathbf{p}_{\mathbf{j}}\right)$$
 
-$$\nabla_{\mathrm{p_k}} E_{g}=\sum_{e \in P\left(p_{i}\right)} 4\left(\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)^{2}-\left(l_{t}(e)\right)^{2}\right)\left(\mathbf{p}_{\mathbf{k}}-\mathbf{p}_{\mathbf{l}}\right)$$
+$$\nabla_{\mathrm{p_i}} E_{g}=\sum_{e \in \mathcal{P}} 4\left(\left(\mathbf{p}_{\mathbf{i}}-\mathbf{p}_{\mathbf{j}}\right)^{2}-\left(l_{t}(e)\right)^{2}\right)\left(\mathbf{p}_{\mathbf{i}}-\mathbf{p}_{\mathbf{j}}\right)$$
 
 $$
-\nabla_{\mathrm{p_m}} E_{c}=\sum_{e \in \mathcal{C}}4\left(\left(\alpha(\mathbf {p}_{n}-\mathbf {p}_\mathbf{m}\right)+\mathbf{p}_m-\beta(\mathbf{p}_\mathbf{o} - \mathbf{p}_\mathbf{m}) - \mathbf{p}_\mathbf{m})^2-\left(l_{t}(e)\right)^{2}\right)\left(\alpha(\mathbf {p}_{n}-\mathbf {p}_\mathbf{m}\right)+\mathbf{p}_m-\beta(\mathbf{p}_\mathbf{o} - \mathbf{p}_\mathbf{m}) - \mathbf{p}_\mathbf{m})(\alpha+\beta)
+\nabla_{\mathrm{p_m}} E_{c}=\sum_{e \in \mathcal{C}}-4\alpha\left(\left(\alpha(\mathbf {p_j}-\mathbf {p}_\mathbf{i}\right)+\mathbf{p_i}-\beta(\mathbf{p}_\mathbf{l} - \mathbf{p}_\mathbf{k}) - \mathbf{p}_\mathbf{k})^2-\left(l_{t}(e)\right)^{2}\right)\left(\alpha(\mathbf {p_j}-\mathbf {p}_\mathbf{i}\right)+\mathbf{p_i}-\beta(\mathbf{p}_\mathbf{l} - \mathbf{p}_\mathbf{k}) - \mathbf{p}_\mathbf{k})
 $$
 
 优化欧式距离时，可以直接对$p_i$求导，优化测地距离时，用的是最短路径，也就是路径顶点之间距离之和，所以也可以直接对$p_i$求导，而优化围长时，围长与网格的交点不一定是网格顶点，所以不能直接求导。但是交点仍然可以用其所在边的两个端点来线性表示它。所以通过转换后仍然可以对$p_i$求导。
